@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sweetheart Sleuths - Cute Haunted Bakery</title> 
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0d8f0; /* Lighter Lavender background for page */
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; 
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden; 
+        }
+        .game-super-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100vh; 
+        }
+        #threejs-canvas-container {
+            width: 100%;
+            max-width: 900px; 
+            aspect-ratio: 16 / 9;
+            background-color: #2c1f3a; /* Dark purple for canvas background */
+            border-radius: 15px;
+            border: 3px solid #ab87ff; /* Brighter purple border */
+            cursor: grab; 
+            margin-bottom: 10px; 
+        }
+        #threejs-canvas-container.pointer-locked {
+            cursor: none; 
+        }
+        .game-ui-container { 
+            background-color: #f5e6ff; /* Lighter lavender for UI */
+            border: 5px solid #c599ff; /* Medium purple border */
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            padding: 15px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 95%;
+            max-width: 900px;
+            overflow-y: auto; 
+            flex-shrink: 1; 
+            margin-bottom: 20px; 
+        }
+        .ui-panel {
+            background-color: #ffffff;
+            padding: 10px; 
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-top: 10px; 
+            width: 100%;
+            text-align: center;
+        }
+        .tool-button, .action-button, .evidence-button, .guess-button {
+            background-color: #d8bfff; /* Light lavender buttons */
+            color: #4a0072; /* Dark purple text */
+            border: 2px solid #b085f5; /* Darker lavender border */
+            padding: 8px 12px; 
+            margin: 3px; 
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            font-family: 'Comic Neue', cursive;
+        }
+        .tool-button:hover, .action-button:hover, .evidence-button:hover, .guess-button:hover {
+            background-color: #b085f5;
+            transform: translateY(-2px);
+        }
+        .tool-button.active {
+            background-color: #8a2be2; /* BlueViolet */
+            color: white;
+            box-shadow: 0 0 10px #8a2be2;
+        }
+        .journal {
+            background-color: #faf0e6; /* Linen - slightly off-white */
+            border: 2px solid #d3b6a0; /* Dusty rose gold */
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .journal h3 {
+            color: #8b4513; /* SaddleBrown */
+            font-family: 'Comic Neue', cursive;
+        }
+        .spook-meter-container {
+            width: 100%;
+            background-color: #e7e5e4; 
+            border-radius: 10px;
+            margin: 8px 0;
+            padding: 3px;
+        }
+        .spook-meter-bar {
+            height: 20px; 
+            width: 0%;
+            background-color: #ff7f7f; /* Coral pink for spook */
+            border-radius: 7px;
+            transition: width 0.5s ease-in-out;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            font-weight: bold;
+        }
+        .message-box {
+            background-color: #e6e6fa; /* Lavender */
+            color: #483d8b; /* DarkSlateBlue */
+            padding: 8px;
+            border-radius: 8px;
+            margin-top: 8px;
+            font-weight: bold;
+            min-height: 35px; 
+        }
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(40,20,60,0.7); /* Darker purple overlay */
+            display: flex;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background-color: #f0e8ff; /* Very light lavender */
+            padding: 30px; border-radius: 15px;
+            text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 3px solid #ab87ff;
+        }
+        .modal-content h2 { font-family: 'Comic Neue', cursive; color: #6a0dad; margin-bottom: 20px; } /* Purple */
+        .hidden { display: none; }
+        #auth-status, #user-id-display { font-size: 0.8em; color: #6b7280; margin-top: 5px; }
+        #user-id-display { word-break: break-all; }
+        h1 { font-family: 'Comic Neue', cursive; color: #6a0dad; } /* Main title purple */
+        #crosshair {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            border: 1px solid white; 
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference; 
+            z-index: 998; 
+            display: none; 
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; 
+        }
+        #found-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%); 
+            background-color: rgba(220, 200, 255, 0.9); /* Lighter lavender popup */
+            color: #4a0072; 
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 999; 
+            font-family: 'Comic Neue', cursive;
+            font-size: 1.2em;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        #found-popup.visible {
+            opacity: 1;
+        }
+        .no-match-message {
+            color: #8b0000; /* DarkRed */
+            font-style: italic;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-super-container">
+        <h1 class="text-3xl md:text-4xl font-bold my-3 md:my-4">Sweetheart Sleuths 3D</h1> 
+        <div id="auth-status">Initializing...</div>
+        <div id="user-id-display" class="mb-1"></div>
+        <div id="high-score" class="text-lg text-purple-600 font-semibold mb-2">High Score: 0</div>
+
+        <div id="threejs-canvas-container">
+            </div>
+        <div id="crosshair"></div>
+        <div id="found-popup" class="hidden"></div> 
+        <div class="game-ui-container">
+            <div class="ui-panel">
+                <h2 class="text-xl font-semibold text-purple-600 mb-2">Tools</h2>
+                <div id="tools-container"></div>
+            </div>
+            <div class="ui-panel">
+                <h2 class="text-xl font-semibold text-purple-600 mb-2">Spook Meter</h2>
+                <div class="spook-meter-container">
+                    <div id="spook-meter-bar" class="spook-meter-bar">0%</div>
+                </div>
+            </div>
+            <div class="journal">
+                <h3 class="text-2xl font-semibold mb-2">Detective's Journal</h3>
+                <ul id="evidence-list" class="list-disc list-inside text-gray-700"></ul>
+                <div id="evidence-buttons-container" class="mt-3"></div>
+                <div class="mt-4">
+                    <h4 class="text-lg font-semibold text-purple-500">Which Sweetheart is it?</h4>
+                    <div id="sweetheart-guesses-container">
+                        </div>
+                </div>
+            </div>
+            <div id="message-box" class="message-box">Welcome, Detective! Click on the 3D view to enable mouse look, then use WASD to move. Click to interact.</div>
+        </div>
+    </div>
+
+    <div id="resultModal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="modalTitle">Game Over!</h2>
+            <p id="modalMessage" class="mb-4"></p> 
+            <p id="modalSnack" class="mb-4 font-bold"></p>
+            <button id="playAgainButton" class="action-button">Play Again</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID" };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'sanrio-sweetheart-sleuths-3d-wasd-dev';
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let userId = null;
+        let dbUserRef = null;
+        let isAuthReady = false;
+
+        const authStatusEl = document.getElementById('auth-status');
+        const userIdDisplayEl = document.getElementById('user-id-display');
+        const highScoreEl = document.getElementById('high-score');
+
+        let scene, camera, renderer, raycaster;
+        let roomObjects = []; 
+        let evidenceObjects3D = []; 
+        let sweetheartMesh = null; 
+        let floatingOrbs = []; 
+        let wallDecorations = []; // To keep track of decorations for potential cleanup
+
+        const INTERACTION_DISTANCE_3D = 4; 
+        const CAMERA_HEIGHT = 1.6; 
+        const ROOM_WIDTH = 10, ROOM_DEPTH = 10, ROOM_HEIGHT = 3;
+
+        const moveSpeed = 0.08; 
+        const lookSpeed = 0.002;
+        let keysPressed = {};
+        let isPointerLocked = false;
+        let euler = new THREE.Euler(0, 0, 0, 'YXZ'); 
+        const PI_2 = Math.PI / 2; 
+
+        let foundEvidenceSynth, proximitySynth, musicSynth, bassSynth, musicLoop;
+        let audioInitialized = false;
+
+        const toolsContainer = document.getElementById('tools-container');
+        const evidenceListEl = document.getElementById('evidence-list');
+        const evidenceButtonsContainer = document.getElementById('evidence-buttons-container');
+        const sweetheartGuessesContainer = document.getElementById('sweetheart-guesses-container');
+        const spookMeterBar = document.getElementById('spook-meter-bar');
+        const messageBox = document.getElementById('message-box');
+        const resultModal = document.getElementById('resultModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalSnack = document.getElementById('modalSnack');
+        const playAgainButton = document.getElementById('playAgainButton');
+        const canvasContainer = document.getElementById('threejs-canvas-container');
+        const crosshairEl = document.getElementById('crosshair');
+        const foundPopupEl = document.getElementById('found-popup'); 
+
+        let currentTool = null;
+        let spookLevel = 0;
+        const maxSpookLevel = 100;
+        let evidenceFoundThisRound = new Set(); 
+        let journalEvidence = new Set(); 
+        let currentSweetheart;
+        let gameActive = false;
+
+        const TOOLS = { 
+            SPARKLE_WAND: { id: 'SPARKLE_WAND', name: 'Sparkle Wand', color: '#FFD700', evidence: 'SHIMMERING_TRAILS', description: 'Detects shimmering trails.' },
+            MELODY_LISTENER: { id: 'MELODY_LISTENER', name: 'Melody Listener', color: '#87CEFA', evidence: 'FAINT_GIGGLES', description: 'Listens for faint giggles.' }, 
+            MAGNIFYING_GLASS: { id: 'MAGNIFYING_GLASS', name: 'Magnifying Glass', color: '#F4A460', evidence: 'TINY_TREAT_CRUMBS', description: 'Spots tiny treat crumbs.' }, 
+            AROMA_SNIFFER: { id: 'AROMA_SNIFFER', name: 'Aroma Sniffer', color: '#FF69B4', evidence: 'SWEET_AROMA', description: 'Detects sweet aromas.' },
+            LIGHT_DETECTOR: { id: 'LIGHT_DETECTOR', name: 'Light Flicker Detector', color: '#FFFFE0', evidence: 'FLICKERING_LIGHTS', description: 'Detects flickering lights.' }, 
+        };
+        const EVIDENCE_TYPES = {
+            SHIMMERING_TRAILS: { id: 'SHIMMERING_TRAILS', name: 'Shimmering Trails', color: '#FFC0CB', baseColor: 0xFFC0CB },
+            FAINT_GIGGLES: { id: 'FAINT_GIGGLES', name: 'Faint Giggles', color: '#87CEFA', baseColor: 0x87CEFA },
+            TINY_TREAT_CRUMBS: { id: 'TINY_TREAT_CRUMBS', name: 'Tiny Treat Crumbs', color: '#F4A460', baseColor: 0xF4A460 },
+            FLICKERING_LIGHTS: { id: 'FLICKERING_LIGHTS', name: 'Flickering Lights', color: '#FFFFE0', baseColor: 0xFFFFE0 },
+            SWEET_AROMA: { id: 'SWEET_AROMA', name: 'Sweet Aroma', color: '#D8BFD8', baseColor: 0xD8BFD8 }, 
+        };
+        const SWEETHEARTS = [
+            { id: 'GIGGLEMUFFIN', name: 'Gigglemuffin', color: '#FFB6C1', threeColor: 0xFFB6C1, evidence: [EVIDENCE_TYPES.SHIMMERING_TRAILS.id, EVIDENCE_TYPES.FAINT_GIGGLES.id, EVIDENCE_TYPES.SWEET_AROMA.id], snack: 'Cupcakes' },
+            { id: 'CRUMBLESTAR', name: 'Crumblestar', color: '#AEC6CF', threeColor: 0xAEC6CF, evidence: [EVIDENCE_TYPES.TINY_TREAT_CRUMBS.id, EVIDENCE_TYPES.FLICKERING_LIGHTS.id, EVIDENCE_TYPES.SHIMMERING_TRAILS.id], snack: 'Cookies' },
+            { id: 'MELOSNOOZE', name: 'Melosnooze', color: '#B2DFDB', threeColor: 0xB2DFDB, evidence: [EVIDENCE_TYPES.FAINT_GIGGLES.id, EVIDENCE_TYPES.SWEET_AROMA.id, EVIDENCE_TYPES.FLICKERING_LIGHTS.id], snack: 'Warm Milk & Honey' }
+        ];
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                authStatusEl.textContent = 'Authenticated!';
+                userIdDisplayEl.textContent = `User ID: ${userId}`;
+                dbUserRef = doc(db, `artifacts/${appId}/users/${userId}/gamedata`, "playerStats");
+                isAuthReady = true;
+                loadHighScore();
+                initGame();
+            } else {
+                authStatusEl.textContent = 'Authenticating...';
+                isAuthReady = false;
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await setPersistence(auth, browserLocalPersistence);
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Authentication error:", error);
+                    authStatusEl.textContent = `Auth Error. Game may not save progress.`;
+                    userId = `local-${crypto.randomUUID()}`;
+                    dbUserRef = null;
+                    isAuthReady = true; 
+                    initGame();
+                }
+            }
+        });
+
+        function initThreeJS() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x3a2f4a); 
+
+            const aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
+            camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
+            camera.position.set(0, CAMERA_HEIGHT, ROOM_DEPTH / 2 - 1); 
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            canvasContainer.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0x605080, 0.6); 
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffe0b0, 0.7); 
+            directionalLight.position.set(8, 12, 10);
+            directionalLight.castShadow = true; 
+            scene.add(directionalLight);
+
+            raycaster = new THREE.Raycaster();
+            
+            create3DRoom();
+            setupControls();
+        }
+
+        function setupControls() {
+            canvasContainer.addEventListener('click', async () => { 
+                if (!audioInitialized) {
+                    try {
+                        await Tone.start(); 
+                        console.log("Tone.js context started.");
+
+                        foundEvidenceSynth = new Tone.Synth({
+                            oscillator: { type: "sine" },
+                            envelope: { attack: 0.01, decay: 0.1, sustain: 0.05, release: 0.2 }
+                        }).toDestination();
+
+                        proximitySynth = new Tone.Synth({
+                            oscillator: { type: "triangle" },
+                            envelope: { attack: 0.005, decay: 0.05, sustain: 0.01, release: 0.1 },
+                            volume: -15
+                        }).toDestination();
+                        
+                        const reverb = new Tone.Reverb(0.6).toDestination(); 
+                        const delay = new Tone.FeedbackDelay("6n", 0.35).connect(reverb); 
+
+                        musicSynth = new Tone.PolySynth(Tone.Synth, {
+                            oscillator: { type: "pulse", width: 0.3 }, 
+                            envelope: { attack: 0.03, decay: 0.3, sustain: 0.05, release: 0.4 },
+                            volume: -20 
+                        }).connect(delay);
+
+                        bassSynth = new Tone.MonoSynth({
+                            oscillator: { type: "fmsquare", modulationIndex: 0.5 }, 
+                            envelope: { attack: 0.02, decay: 0.15, sustain: 0.1, release: 0.3 },
+                            filter: { Q: 2, type: "lowpass", frequency: 200 }, 
+                            filterEnvelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1, baseFrequency: 100, octaves: 2 },
+                            volume: -14
+                        }).toDestination();
+
+                        const melody = [
+                            ["A3", "C4", "E4"], null, "D#4", null, 
+                            "D4", null, ["C4", "A3"], null,      
+                            ["G#3", "C4", "D#4"], null, "C4", null, 
+                            "B3", null, "A3", null              
+                        ];
+                        const bassLine = [
+                            "A1", null, "A1", null, 
+                            "D2", null, "D2", null,
+                            "G#1", null, "G#1", null,
+                            "E1", null, "E1", null
+                        ];
+
+                        let melodyIndex = 0;
+                        let bassIndex = 0;
+
+                        musicLoop = new Tone.Loop(time => {
+                            const currentMelodyNotes = melody[melodyIndex % melody.length];
+                            if (currentMelodyNotes) {
+                                musicSynth.triggerAttackRelease(currentMelodyNotes, "4n", time); 
+                            }
+                            melodyIndex++;
+
+                            const currentBassNote = bassLine[bassIndex % bassLine.length];
+                            if(currentBassNote) {
+                                bassSynth.triggerAttackRelease(currentBassNote, "2n", time); 
+                            }
+                            bassIndex++;
+
+                        }, "2n").start(0); 
+
+                        Tone.Transport.bpm.value = 75; 
+                        Tone.Transport.start();
+                        
+                        audioInitialized = true;
+                        console.log("Audio synths and music initialized.");
+                    } catch (e) {
+                        console.error("Error initializing audio:", e);
+                        messageBox.textContent = "Could not initialize audio. Sound features may not work.";
+                    }
+                }
+
+                if (!isPointerLocked) {
+                    if (document.visibilityState === 'visible' && document.hasFocus()) { 
+                        try {
+                            if (typeof renderer.domElement.requestPointerLock === 'function') {
+                                await renderer.domElement.requestPointerLock(); 
+                            } else {
+                                messageBox.textContent = "Pointer Lock not supported by your browser.";
+                            }
+                        } catch (err) {
+                            console.warn("Pointer lock request failed or was cancelled by user:", err.name, err.message);
+                        }
+                    } else {
+                        messageBox.textContent = "Game not focused. Click again to enable mouse look.";
+                    }
+                } else {
+                    handleInteractionClick();
+                }
+            });
+
+            document.addEventListener('pointerlockchange', pointerLockChange, false);
+            document.addEventListener('mozpointerlockchange', pointerLockChange, false);
+            document.addEventListener('webkitpointerlockchange', pointerLockChange, false);
+
+            document.addEventListener('mousemove', onMouseMove, false);
+            document.addEventListener('keydown', onKeyDown, false);
+            document.addEventListener('keyup', onKeyUp, false);
+        }
+
+        function pointerLockChange() {
+            const lockElement = document.pointerLockElement ||
+                                document.mozPointerLockElement ||
+                                document.webkitPointerLockElement;
+
+            if (lockElement === renderer.domElement) {
+                isPointerLocked = true;
+                canvasContainer.classList.add('pointer-locked');
+                crosshairEl.style.display = 'block';
+            } else {
+                isPointerLocked = false;
+                canvasContainer.classList.remove('pointer-locked');
+                crosshairEl.style.display = 'none';
+                keysPressed = {}; 
+            }
+        }
+
+        function onMouseMove(event) {
+            if (!isPointerLocked || !gameActive) return;
+            const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+            const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+
+            euler.setFromQuaternion(camera.quaternion);
+            euler.y -= movementX * lookSpeed;
+            euler.x -= movementY * lookSpeed;
+            euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x)); 
+            camera.quaternion.setFromEuler(euler);
+        }
+
+        function onKeyDown(event) {
+            if (!isPointerLocked || !gameActive) return;
+            keysPressed[event.key.toLowerCase()] = true;
+        }
+
+        function onKeyUp(event) {
+            if (!isPointerLocked || !gameActive) return;
+            keysPressed[event.key.toLowerCase()] = false;
+        }
+        
+        function createCobweb(x, y, z, size = 1, rotationY = 0, rotationX = 0, rotationZ = 0) {
+            const material = new THREE.LineBasicMaterial({ color: 0xcccccc, transparent: true, opacity: 0.5 });
+            const points = [];
+            const center = new THREE.Vector3(0,0,0);
+            const numStrands = 5 + Math.floor(Math.random() * 3); 
+            const numCircles = 2 + Math.floor(Math.random() * 2); 
+
+            for (let i = 0; i < numStrands; i++) {
+                const angle = (i / numStrands) * Math.PI * 2;
+                points.push(center.clone());
+                points.push(new THREE.Vector3(Math.cos(angle) * size, Math.sin(angle) * size, 0));
+            }
+            for (let j = 1; j <= numCircles; j++) {
+                const radius = (j / numCircles) * size * 0.8; 
+                for (let i = 0; i < numStrands; i++) {
+                    const angle1 = (i / numStrands) * Math.PI * 2;
+                    const angle2 = ((i + 1) / numStrands) * Math.PI * 2;
+                    points.push(new THREE.Vector3(Math.cos(angle1) * radius, Math.sin(angle1) * radius, 0));
+                    points.push(new THREE.Vector3(Math.cos(angle2) * radius, Math.sin(angle2) * radius, 0));
+                }
+            }
+
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const cobweb = new THREE.LineSegments(geometry, material);
+            cobweb.position.set(x, y, z);
+            cobweb.rotation.set(rotationX, rotationY, rotationZ);
+            cobweb.userData.type = "decoration";
+            scene.add(cobweb);
+            wallDecorations.push(cobweb);
+        }
+
+        function createFloatingOrbs(count = 3) {
+            floatingOrbs.forEach(orb => scene.remove(orb)); 
+            floatingOrbs = [];
+
+            const orbGeo = new THREE.SphereGeometry(0.08, 12, 12);
+            for (let i = 0; i < count; i++) {
+                const orbMat = new THREE.MeshBasicMaterial({
+                    color: currentSweetheart.threeColor, 
+                    transparent: true,
+                    opacity: 0.4 + Math.random() * 0.2, 
+                    blending: THREE.AdditiveBlending 
+                });
+                const orb = new THREE.Mesh(orbGeo, orbMat);
+                orb.position.set(
+                    (Math.random() - 0.5) * (ROOM_WIDTH - 1),
+                    CAMERA_HEIGHT + (Math.random() - 0.5) * 1.5, 
+                    (Math.random() - 0.5) * (ROOM_DEPTH - 1)
+                );
+                orb.userData = {
+                    type: "decoration",
+                    dx: (Math.random() - 0.5) * 0.002,
+                    dy: (Math.random() - 0.5) * 0.002,
+                    dz: (Math.random() - 0.5) * 0.002
+                };
+                scene.add(orb);
+                floatingOrbs.push(orb);
+            }
+        }
+
+        function createBakeryItem(type, position) {
+            let itemMesh;
+            const itemGroup = new THREE.Group(); 
+            itemGroup.position.copy(position);
+
+            if (type === 'ghost_cupcake') {
+                const cakeGeo = new THREE.CylinderGeometry(0.1, 0.15, 0.15, 12);
+                const cakeMat = new THREE.MeshStandardMaterial({ color: 0x704214 }); // Darker Brown cake
+                const cake = new THREE.Mesh(cakeGeo, cakeMat);
+                itemGroup.add(cake);
+
+                const frostingGeo = new THREE.SphereGeometry(0.12, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.8); 
+                const frostingMat = new THREE.MeshStandardMaterial({ color: 0xC8A2C8 }); // Lilac frosting
+                const frosting = new THREE.Mesh(frostingGeo, frostingMat);
+                frosting.position.y = 0.15;
+                itemGroup.add(frosting);
+
+                const eyeGeo = new THREE.SphereGeometry(0.02, 8, 8);
+                const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1a1a1a }); // Very dark eyes
+                const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+                leftEye.position.set(-0.04, 0.2, 0.08);
+                itemGroup.add(leftEye);
+                const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+                rightEye.position.set(0.04, 0.2, 0.08);
+                itemGroup.add(rightEye);
+                itemMesh = itemGroup;
+            } else if (type === 'bat_cookie') {
+                const shape = new THREE.Shape();
+                shape.moveTo(0, 0);
+                shape.bezierCurveTo(0.05, 0.1, 0.15, 0.15, 0.2, 0.05); 
+                shape.lineTo(0.1, 0.02); 
+                shape.lineTo(0.2, -0.05); 
+                shape.bezierCurveTo(0.15, -0.15, 0.05, -0.1, 0, 0); 
+                shape.bezierCurveTo(-0.05, -0.1, -0.15, -0.15, -0.2, -0.05);
+                shape.lineTo(-0.1, 0.02);
+                shape.lineTo(-0.2, 0.05);
+                shape.bezierCurveTo(-0.15, 0.15, -0.05, 0.1, 0, 0);
+
+                const extrudeSettings = { depth: 0.02, bevelEnabled: false };
+                const cookieGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+                const cookieMat = new THREE.MeshStandardMaterial({ color: 0x2B1B17 }); // Almost black
+                itemMesh = new THREE.Mesh(cookieGeo, cookieMat);
+                itemMesh.rotation.x = -Math.PI / 2; 
+            } else if (type === 'web_lollipop') {
+                const stickGeo = new THREE.CylinderGeometry(0.01, 0.01, 0.25, 8);
+                const stickMat = new THREE.MeshStandardMaterial({ color: 0xDCDCDC }); // Light grey stick
+                const stick = new THREE.Mesh(stickGeo, stickMat);
+                stick.position.y = -0.125;
+                itemGroup.add(stick);
+
+                const candyGeo = new THREE.CircleGeometry(0.1, 16);
+                const candyMat = new THREE.MeshStandardMaterial({ color: 0x8A2BE2, side: THREE.DoubleSide }); // BlueViolet candy
+                const candy = new THREE.Mesh(candyGeo, candyMat);
+                itemGroup.add(candy);
+
+                const webMat = new THREE.LineBasicMaterial({ color: 0xF5F5F5, linewidth: 1 }); // Off-white web
+                const points = [];
+                for(let i=0; i < 8; i++) { 
+                    points.push(new THREE.Vector3(0,0,0.001));
+                    points.push(new THREE.Vector3(Math.cos(i/8 * Math.PI*2)*0.1, Math.sin(i/8 * Math.PI*2)*0.1, 0.001));
+                }
+                for(let r=0.03; r < 0.1; r+=0.03){ 
+                     for(let i=0; i <= 8; i++) {
+                        points.push(new THREE.Vector3(Math.cos(i/8 * Math.PI*2)*r, Math.sin(i/8 * Math.PI*2)*r, 0.001));
+                     }
+                }
+                const webGeo = new THREE.BufferGeometry().setFromPoints(points);
+                const web = new THREE.LineSegments(webGeo, webMat); 
+                itemGroup.add(web);
+                itemMesh = itemGroup;
+            }
+            
+            if (itemMesh) {
+                if(itemGroup.children.length > 0) scene.add(itemGroup); else scene.add(itemMesh);
+                wallDecorations.push(itemGroup.children.length > 0 ? itemGroup : itemMesh); 
+            }
+        }
+
+        function createWindows(wallMesh, count = 2, wallOrientation = 'back') { // wallOrientation: 'back', 'front', 'left', 'right'
+            const wallWidth = (wallOrientation === 'left' || wallOrientation === 'right') ? wallMesh.geometry.parameters.depth : wallMesh.geometry.parameters.width;
+            const wallHeight = wallMesh.geometry.parameters.height;
+            const windowWidth = 0.6;
+            const windowHeight = 0.8;
+            const frameDepth = 0.05;
+            const spacing = (wallWidth - (count * windowWidth)) / (count + 1);
+
+            for (let i = 0; i < count; i++) {
+                const windowGroup = new THREE.Group();
+                
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0x3A2D27 }); 
+                const topFrame = new THREE.Mesh(new THREE.BoxGeometry(windowWidth + 0.1, 0.05, frameDepth), frameMat);
+                topFrame.position.y = windowHeight / 2 + 0.025;
+                windowGroup.add(topFrame);
+                const bottomFrame = topFrame.clone();
+                bottomFrame.position.y = -windowHeight / 2 - 0.025;
+                windowGroup.add(bottomFrame);
+                const leftFrame = new THREE.Mesh(new THREE.BoxGeometry(0.05, windowHeight, frameDepth), frameMat);
+                leftFrame.position.x = -windowWidth / 2 - 0.025;
+                windowGroup.add(leftFrame);
+                const rightFrame = leftFrame.clone();
+                rightFrame.position.x = windowWidth / 2 + 0.025;
+                windowGroup.add(rightFrame);
+
+                const paneGeo = new THREE.PlaneGeometry(windowWidth, windowHeight);
+                const paneMat = new THREE.MeshStandardMaterial({ 
+                    color: 0xc0d0ff, 
+                    transparent: true, 
+                    opacity: 0.3,
+                    side: THREE.DoubleSide,
+                    emissive: 0x504070, 
+                    emissiveIntensity: 0.2
+                });
+                const pane = new THREE.Mesh(paneGeo, paneMat);
+                windowGroup.add(pane);
+
+                // Position window ON the wall surface
+                windowGroup.position.y = wallHeight / 2; // Center vertically on the wall object
+
+                if (wallOrientation === 'back') {
+                    windowGroup.position.x = -wallWidth / 2 + spacing + windowWidth / 2 + i * (windowWidth + spacing);
+                    windowGroup.position.z = wallMesh.position.z + wallMesh.geometry.parameters.depth / 2 + frameDepth/2 + 0.001; // Slightly offset
+                } else if (wallOrientation === 'front') {
+                    windowGroup.position.x = -wallWidth / 2 + spacing + windowWidth / 2 + i * (windowWidth + spacing);
+                    windowGroup.position.z = wallMesh.position.z - wallMesh.geometry.parameters.depth / 2 - frameDepth/2 - 0.001;
+                } else if (wallOrientation === 'left') {
+                    windowGroup.position.x = wallMesh.position.x - wallMesh.geometry.parameters.width / 2 - frameDepth/2 - 0.001;
+                    windowGroup.position.z = -wallWidth / 2 + spacing + windowWidth / 2 + i * (windowWidth + spacing);
+                    windowGroup.rotation.y = Math.PI / 2;
+                } else if (wallOrientation === 'right') {
+                    windowGroup.position.x = wallMesh.position.x + wallMesh.geometry.parameters.width / 2 + frameDepth/2 + 0.001;
+                    windowGroup.position.z = -wallWidth / 2 + spacing + windowWidth / 2 + i * (windowWidth + spacing);
+                    windowGroup.rotation.y = -Math.PI / 2;
+                }
+                
+                scene.add(windowGroup);
+                wallDecorations.push(windowGroup);
+            }
+        }
+        
+        function createWallDecorations(wallMesh, type, wallOrientation = 'back') {
+            const decorationGroup = new THREE.Group();
+            decorationGroup.position.y = ROOM_HEIGHT * 0.65; // Default height
+
+            if (type === 'ghost_garland') {
+                const numGhosts = 5;
+                const ghostSpacing = 0.5;
+                const ghostPlaneGeo = new THREE.PlaneGeometry(0.2, 0.3); 
+                const ghostMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7, side:THREE.DoubleSide });
+                for (let i = 0; i < numGhosts; i++) {
+                    const ghostDeco = new THREE.Mesh(ghostPlaneGeo, ghostMat);
+                    ghostDeco.position.x = (i - (numGhosts - 1) / 2) * ghostSpacing;
+                    decorationGroup.add(ghostDeco);
+                }
+            } else if (type === 'spooky_portrait') {
+                const frameSize = 0.5;
+                const frameThickness = 0.05;
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0x221100 });                 
+                const mainFrame = new THREE.Mesh(new THREE.BoxGeometry(frameSize, frameSize, frameThickness), frameMat);
+                decorationGroup.add(mainFrame);
+                const pictureGeo = new THREE.PlaneGeometry(frameSize - 0.1, frameSize - 0.1);
+                const pictureMat = new THREE.MeshBasicMaterial({ color: 0x503060 }); 
+                const picture = new THREE.Mesh(pictureGeo, pictureMat);
+                picture.position.z = frameThickness / 2 + 0.001; 
+                decorationGroup.add(picture);
+            } else if (type === 'hanging_bats') {
+                for (let i=0; i < 3; i++) {
+                    const shape = new THREE.Shape(); // Simple bat shape
+                    shape.moveTo(0,0); shape.lineTo(-0.1, 0.05); shape.lineTo(-0.05, 0); shape.lineTo(-0.1, -0.05); shape.lineTo(0,0);
+                    shape.lineTo(0.1, -0.05); shape.lineTo(0.05, 0); shape.lineTo(0.1, 0.05); shape.lineTo(0,0);
+                    const batGeo = new THREE.ShapeGeometry(shape);
+                    const batMat = new THREE.MeshBasicMaterial({color: 0x1a1a1a, side: THREE.DoubleSide});
+                    const bat = new THREE.Mesh(batGeo, batMat);
+                    bat.position.x = (i - 1) * 0.3; // Spread them out
+                    bat.position.y = (Math.random() -0.5) * 0.1; // Slight vertical variation
+                    decorationGroup.add(bat);
+                }
+            }
+
+
+            if (wallOrientation === 'back') {
+                decorationGroup.position.z = wallMesh.position.z + wallMesh.geometry.parameters.depth / 2 + 0.01;
+            } else if (wallOrientation === 'front') {
+                decorationGroup.position.z = wallMesh.position.z - wallMesh.geometry.parameters.depth / 2 - 0.01;
+                decorationGroup.rotation.y = Math.PI; // Face inwards
+            } else if (wallOrientation === 'left') {
+                decorationGroup.position.x = wallMesh.position.x - wallMesh.geometry.parameters.width / 2 - 0.01;
+                decorationGroup.rotation.y = Math.PI / 2;
+            } else if (wallOrientation === 'right') {
+                decorationGroup.position.x = wallMesh.position.x + wallMesh.geometry.parameters.width / 2 + 0.01;
+                decorationGroup.rotation.y = -Math.PI / 2;
+            }
+            
+            scene.add(decorationGroup);
+            wallDecorations.push(decorationGroup);
+        }
+
+
+        function create3DRoom() { 
+            // Clear previous decorations if any
+            wallDecorations.forEach(deco => {
+                scene.remove(deco);
+                deco.traverse(child => { // Dispose geometries and materials
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(m => m.dispose());
+                        } else {
+                            child.material.dispose();
+                        }
+                    }
+                });
+            });
+            wallDecorations = [];
+            roomObjects = []; // Reset room objects for collision (mainly walls)
+
+            // Floor
+            const floorCanvas = document.createElement('canvas');
+            const tileCtx = floorCanvas.getContext('2d');
+            const tileSize = 64; // Pixel size of one tile in the texture
+            floorCanvas.width = tileSize * 2;
+            floorCanvas.height = tileSize * 2;
+            tileCtx.fillStyle = '#000000'; // Black
+            tileCtx.fillRect(0, 0, tileSize, tileSize);
+            tileCtx.fillRect(tileSize, tileSize, tileSize, tileSize);
+            tileCtx.fillStyle = '#FFFFFF'; // White
+            tileCtx.fillRect(tileSize, 0, tileSize, tileSize);
+            tileCtx.fillRect(0, tileSize, tileSize, tileSize);
+            const floorTexture = new THREE.CanvasTexture(floorCanvas);
+            floorTexture.wrapS = THREE.RepeatWrapping;
+            floorTexture.wrapT = THREE.RepeatWrapping;
+            const tilesPerMeter = 4; // How many tiles fit in 1 world unit
+            floorTexture.repeat.set(ROOM_WIDTH / (tileSize/ (tileSize/tilesPerMeter) ), ROOM_DEPTH / (tileSize/ (tileSize/tilesPerMeter) ));
+
+
+            const floorGeometry = new THREE.PlaneGeometry(ROOM_WIDTH, ROOM_DEPTH);
+            const floorMaterial = new THREE.MeshStandardMaterial({ map: floorTexture }); 
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = -Math.PI / 2; 
+            floor.name = "floor"; 
+            scene.add(floor);
+
+            const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xcdc1ff }); 
+            const wallThickness = 0.2;
+
+            // Back Wall
+            const backWallMesh = new THREE.Mesh(new THREE.BoxGeometry(ROOM_WIDTH, ROOM_HEIGHT, wallThickness), wallMaterial);
+            backWallMesh.position.set(0, ROOM_HEIGHT / 2, -ROOM_DEPTH / 2 + wallThickness / 2);
+            scene.add(backWallMesh);
+            roomObjects.push(backWallMesh);
+            createWindows(backWallMesh, 2, 'back'); 
+            createWallDecorations(backWallMesh, 'hanging_bats', 'back');
+
+
+            // Front Wall
+            const frontWallMesh = new THREE.Mesh(new THREE.BoxGeometry(ROOM_WIDTH, ROOM_HEIGHT, wallThickness), wallMaterial);
+            frontWallMesh.position.set(0, ROOM_HEIGHT / 2, ROOM_DEPTH / 2 - wallThickness / 2);
+            scene.add(frontWallMesh); // Add front wall to scene
+            roomObjects.push(frontWallMesh); 
+            createWindows(frontWallMesh, 2, 'front');
+            // createWallDecorations(frontWallMesh, 'spooky_portrait', 'front'); // Example
+
+
+            // Left Wall
+            const leftWallMesh = new THREE.Mesh(new THREE.BoxGeometry(ROOM_DEPTH, ROOM_HEIGHT, wallThickness), wallMaterial); // Note: width is ROOM_DEPTH due to rotation
+            leftWallMesh.position.set(-ROOM_WIDTH / 2 + wallThickness / 2, ROOM_HEIGHT / 2, 0);
+            leftWallMesh.rotation.y = Math.PI / 2; 
+            scene.add(leftWallMesh);
+            roomObjects.push(leftWallMesh);
+            createWindows(leftWallMesh, 1, 'left');
+            createWallDecorations(leftWallMesh, 'ghost_garland', 'left');
+
+
+            // Right Wall
+            const rightWallMesh = new THREE.Mesh(new THREE.BoxGeometry(ROOM_DEPTH, ROOM_HEIGHT, wallThickness), wallMaterial);
+            rightWallMesh.position.set(ROOM_WIDTH / 2 - wallThickness / 2, ROOM_HEIGHT / 2, 0);
+            rightWallMesh.rotation.y = -Math.PI / 2; 
+            scene.add(rightWallMesh);
+            roomObjects.push(rightWallMesh);
+            createWindows(rightWallMesh, 1, 'right');
+            createWallDecorations(rightWallMesh, 'spooky_portrait', 'right');
+
+            
+            const ceilGeo = new THREE.PlaneGeometry(ROOM_WIDTH, ROOM_DEPTH);
+            const ceilMat = new THREE.MeshStandardMaterial({color: 0xbea6b2, side: THREE.DoubleSide}); 
+            const ceiling = new THREE.Mesh(ceilGeo, ceilMat);
+            ceiling.position.y = ROOM_HEIGHT;
+            ceiling.rotation.x = Math.PI / 2;
+            scene.add(ceiling);
+
+            const counterMesh = new THREE.Mesh(
+                new THREE.BoxGeometry(ROOM_WIDTH * 0.6, ROOM_HEIGHT * 0.4, ROOM_DEPTH * 0.2), 
+                new THREE.MeshStandardMaterial({ color: 0x5D4037 }) 
+            );
+            counterMesh.position.set(0, (ROOM_HEIGHT * 0.4) / 2, -ROOM_DEPTH / 2 + (ROOM_DEPTH * 0.2) / 2 + 0.5); 
+            scene.add(counterMesh);
+            roomObjects.push(counterMesh);
+
+            const counterTopY = counterMesh.position.y + (ROOM_HEIGHT * 0.4) / 2 + 0.01; 
+            createBakeryItem('ghost_cupcake', new THREE.Vector3(-0.5, counterTopY, counterMesh.position.z));
+            createBakeryItem('ghost_cupcake', new THREE.Vector3(0, counterTopY, counterMesh.position.z + 0.05));
+            createBakeryItem('ghost_cupcake', new THREE.Vector3(0.5, counterTopY, counterMesh.position.z));
+            createBakeryItem('bat_cookie', new THREE.Vector3(-0.2, counterTopY, counterMesh.position.z - 0.1));
+            createBakeryItem('bat_cookie', new THREE.Vector3(0.2, counterTopY, counterMesh.position.z - 0.1));
+            createBakeryItem('web_lollipop', new THREE.Vector3(0.8, counterTopY + 0.125, counterMesh.position.z)); 
+            createBakeryItem('web_lollipop', new THREE.Vector3(-0.8, counterTopY + 0.125, counterMesh.position.z));
+
+
+            const ovenGeo = new THREE.BoxGeometry(ROOM_WIDTH * 0.2, ROOM_HEIGHT * 0.3, ROOM_DEPTH * 0.15);
+            const ovenMat = new THREE.MeshStandardMaterial({ color: 0x555555 }); 
+            const oven = new THREE.Mesh(ovenGeo, ovenMat);
+            oven.position.set(ROOM_WIDTH * 0.3, (ROOM_HEIGHT * 0.3) / 2, -ROOM_DEPTH / 2 + (ROOM_DEPTH * 0.15) / 2 + 0.6);
+            scene.add(oven);
+            roomObjects.push(oven);
+
+            createCobweb(-ROOM_WIDTH/2 + 0.3, ROOM_HEIGHT - 0.3, -ROOM_DEPTH/2 + 0.3, 0.8, Math.PI / 4); 
+            createCobweb(ROOM_WIDTH/2 - 0.3, ROOM_HEIGHT - 0.3, -ROOM_DEPTH/2 + 0.3, 0.7, -Math.PI / 4); 
+            createCobweb(-ROOM_WIDTH/2 + 0.3, 0.3, ROOM_DEPTH/2 - 0.3, 0.6, Math.PI * 0.75); 
+            createCobweb(0, ROOM_HEIGHT -0.1, 0, 1.2); 
+        }
+
+        function placeSweetheartGhost() {
+            if (sweetheartMesh) {
+                scene.remove(sweetheartMesh);
+                if(sweetheartMesh.geometry) sweetheartMesh.geometry.dispose();
+                if(sweetheartMesh.material) {
+                    if(Array.isArray(sweetheartMesh.material)) {
+                        sweetheartMesh.material.forEach(m => m.dispose());
+                    } else {
+                        sweetheartMesh.material.dispose();
+                    }
+                }
+                sweetheartMesh.children.forEach(child => {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) child.material.dispose();
+                });
+                sweetheartMesh = null;
+            }
+
+            const ghostGeo = new THREE.SphereGeometry(0.4, 16, 12); 
+            ghostGeo.scale(1, 1.2, 1); 
+            const ghostMat = new THREE.MeshStandardMaterial({
+                color: currentSweetheart.threeColor,
+                transparent: true,
+                opacity: 0.5, 
+                emissive: currentSweetheart.threeColor, 
+                emissiveIntensity: 0.2 
+            });
+            sweetheartMesh = new THREE.Mesh(ghostGeo, ghostMat);
+
+            const eyeGeo = new THREE.SphereGeometry(0.05, 8, 8);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x222222 }); 
+            const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+            leftEye.position.set(-0.15, 0.15, 0.35); 
+            const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+            rightEye.position.set(0.15, 0.15, 0.35);
+            sweetheartMesh.add(leftEye);
+            sweetheartMesh.add(rightEye);
+            
+            sweetheartMesh.position.set(
+                (Math.random() - 0.5) * (ROOM_WIDTH - 3), 
+                CAMERA_HEIGHT + (Math.random() * 0.3 - 0.15), 
+                (Math.random() - 0.5) * (ROOM_DEPTH - 3)
+            );
+            sweetheartMesh.userData.type = "sweetheart_ghost";
+            scene.add(sweetheartMesh);
+        }
+
+
+        function place3DEvidence() {
+            evidenceObjects3D.forEach(obj => {
+                scene.remove(obj.mesh);
+                if(obj.mesh.geometry) obj.mesh.geometry.dispose();
+                if(obj.mesh.material) obj.mesh.material.dispose();
+            });
+            evidenceObjects3D = [];
+
+            const evidenceToPlace = currentSweetheart.evidence;
+            evidenceToPlace.forEach(evidenceId => {
+                const evData = EVIDENCE_TYPES[evidenceId];
+                const evidenceGeo = new THREE.SphereGeometry(0.15, 16, 16); 
+                const evidenceMat = new THREE.MeshStandardMaterial({
+                    color: evData.baseColor, 
+                    transparent: true,
+                    opacity: 0.35,
+                    emissive: new THREE.Color(0x000000), 
+                    emissiveIntensity: 1 
+                });
+                const evidenceMesh = new THREE.Mesh(evidenceGeo, evidenceMat);
+
+                evidenceMesh.position.set(
+                    (Math.random() - 0.5) * (ROOM_WIDTH - 2.5), 
+                    Math.random() * (ROOM_HEIGHT - 1.5) + 0.75, 
+                    (Math.random() - 0.5) * (ROOM_DEPTH - 2.5)  
+                );
+                evidenceMesh.position.y = Math.max(0.5, Math.min(evidenceMesh.position.y, ROOM_HEIGHT - 0.5));
+
+                evidenceMesh.userData = { type: 'evidence', evidenceInfo: evData, found: false };
+                scene.add(evidenceMesh);
+                evidenceObjects3D.push({ mesh: evidenceMesh, evidenceData: evData, found: false });
+            });
+        }
+
+        function initGame() {
+            if (!isAuthReady) {
+                setTimeout(initGame, 1000);
+                return;
+            }
+            if (!scene) { 
+                initThreeJS(); // Calls create3DRoom which now includes decorations
+            } else {
+                 // If scene exists, just re-create dynamic elements like evidence and ghost
+                create3DRoom(); // Re-create room to clear old decorations and place new ones
+            }
+            
+            spookLevel = 0;
+            evidenceFoundThisRound.clear();
+            journalEvidence.clear();
+            currentTool = null;
+            gameActive = true;
+            keysPressed = {}; 
+
+            currentSweetheart = SWEETHEARTS[Math.floor(Math.random() * SWEETHEARTS.length)];
+            messageBox.textContent = "Use your detective skills to reveal the type of Sweetheart in the bakery!"; 
+
+            place3DEvidence();
+            placeSweetheartGhost(); 
+            createFloatingOrbs(); 
+
+            camera.position.set(0, CAMERA_HEIGHT, ROOM_DEPTH / 2 - 2);
+            euler.set(0,0,0,'YXZ'); 
+            camera.quaternion.setFromEuler(euler);
+
+            updateUI(); 
+            if (!animationFrameId) animate(); 
+            if (audioInitialized && Tone.Transport.state !== "started") {
+                Tone.Transport.start(); 
+            }
+        }
+        let animationFrameId;
+
+        function updateUI() { 
+            toolsContainer.innerHTML = '';
+            Object.values(TOOLS).forEach(tool => {
+                const button = document.createElement('button');
+                button.textContent = tool.name;
+                button.classList.add('tool-button');
+                if (currentTool && currentTool.id === tool.id) button.classList.add('active');
+                button.onclick = () => selectTool(tool);
+                toolsContainer.appendChild(button);
+            });
+
+            evidenceButtonsContainer.innerHTML = '';
+            Object.values(EVIDENCE_TYPES).forEach(evType => {
+                const btn = document.createElement('button');
+                btn.textContent = evType.name;
+                btn.classList.add('evidence-button');
+                if (journalEvidence.has(evType.id)) {
+                    btn.classList.add('active');
+                    btn.style.backgroundColor = evType.color;
+                    btn.style.color = 'black';
+                }
+                btn.onclick = () => toggleJournalEvidence(evType.id);
+                evidenceButtonsContainer.appendChild(btn);
+            });
+
+            evidenceListEl.innerHTML = '';
+            if (journalEvidence.size === 0) {
+                 const li = document.createElement('li');
+                 li.textContent = "No evidence logged. Use tools and click on clues in the scene!";
+                 evidenceListEl.appendChild(li);
+            } else {
+                journalEvidence.forEach(evId => {
+                    const li = document.createElement('li');
+                    li.textContent = EVIDENCE_TYPES[evId].name;
+                    li.style.color = EVIDENCE_TYPES[evId].color;
+                    evidenceListEl.appendChild(li);
+                });
+            }
+
+            sweetheartGuessesContainer.innerHTML = '';
+            let possibleSweethearts = [];
+            if (journalEvidence.size === 0) {
+                possibleSweethearts = [...SWEETHEARTS]; 
+            } else {
+                possibleSweethearts = SWEETHEARTS.filter(sh => {
+                    return Array.from(journalEvidence).every(loggedEvId => sh.evidence.includes(loggedEvId));
+                });
+            }
+
+            if (possibleSweethearts.length > 0) {
+                possibleSweethearts.forEach(sh => {
+                    const button = document.createElement('button');
+                    button.textContent = `Guess: ${sh.name}`;
+                    button.classList.add('guess-button');
+                    button.onclick = () => makeGuess(sh.id);
+                    sweetheartGuessesContainer.appendChild(button);
+                });
+            } else {
+                const noMatchMsg = document.createElement('p');
+                noMatchMsg.textContent = "No Sweetheart matches this evidence combination.";
+                noMatchMsg.classList.add('no-match-message');
+                sweetheartGuessesContainer.appendChild(noMatchMsg);
+            }
+            
+            const spookPercent = (spookLevel / maxSpookLevel) * 100;
+            spookMeterBar.style.width = `${spookPercent}%`;
+            spookMeterBar.textContent = `${Math.round(spookPercent)}%`;
+            spookMeterBar.style.backgroundColor = spookPercent > 70 ? '#dc2626' : spookPercent > 40 ? '#f59e0b' : '#fb7185';
+        }
+
+        function selectTool(tool) {
+            currentTool = tool;
+            messageBox.textContent = `Selected ${tool.name}. ${tool.description}`;
+            updateUI(); 
+        }
+
+        function toggleJournalEvidence(evidenceId) { 
+            if (journalEvidence.has(evidenceId)) {
+                journalEvidence.delete(evidenceId);
+            } else if (journalEvidence.size < 3) {
+                journalEvidence.add(evidenceId);
+            } else {
+                messageBox.textContent = "You can only log up to 3 pieces of evidence!";
+            }
+            updateUI(); 
+        }
+        
+        function handleInteractionClick() {
+            if (!gameActive || !isPointerLocked) return; 
+
+            raycaster.setFromCamera({x:0, y:0}, camera); 
+            const intersects = raycaster.intersectObjects(evidenceObjects3D.map(e => e.mesh), false); 
+
+            if (intersects.length > 0) {
+                const obj = intersects[0].object; 
+                if (obj.userData.type === 'evidence' && !obj.userData.found) {
+                    const distance = camera.position.distanceTo(obj.position);
+                    if (distance < INTERACTION_DISTANCE_3D) {
+                        if (currentTool && currentTool.evidence === obj.userData.evidenceInfo.id) {
+                            obj.userData.found = true;
+                            evidenceFoundThisRound.add(obj.userData.evidenceInfo.id);
+                            if (journalEvidence.size < 3 && !journalEvidence.has(obj.userData.evidenceInfo.id)) {
+                                journalEvidence.add(obj.userData.evidenceInfo.id);
+                                updateUI(); 
+                            }
+                            
+                            if (foundPopupEl) {
+                                foundPopupEl.textContent = `Found: ${obj.userData.evidenceInfo.name}!`;
+                                foundPopupEl.classList.remove('hidden');
+                                foundPopupEl.classList.add('visible');
+                                setTimeout(() => {
+                                    foundPopupEl.classList.remove('visible');
+                                    setTimeout(() => { foundPopupEl.classList.add('hidden');}, 300); 
+                                }, 1700); 
+                            }
+
+                            obj.material.opacity = 1; 
+                            obj.material.emissive.setHex(obj.userData.evidenceInfo.baseColor); 
+                            obj.material.emissiveIntensity = 0.4; 
+                            triggerMischiefEvent(5);
+
+                            if (audioInitialized && foundEvidenceSynth) {
+                                foundEvidenceSynth.triggerAttackRelease("C5", "8n", Tone.now());
+                                foundEvidenceSynth.triggerAttackRelease("E5", "8n", Tone.now() + 0.1);
+                                foundEvidenceSynth.triggerAttackRelease("G5", "8n", Tone.now() + 0.2);
+                            }
+
+                        } else if (currentTool) {
+                            messageBox.textContent = `Wrong tool for ${obj.userData.evidenceInfo.name}.`;
+                        } else {
+                            messageBox.textContent = "Select a tool to investigate this suspicious spot!";
+                        }
+                    } else {
+                        messageBox.textContent = `Too far from the ${obj.userData.evidenceInfo.name}. Get closer!`;
+                    }
+                }
+            } else {
+                messageBox.textContent = "Nothing to interact with there.";
+            }
+        }
+
+        function triggerMischiefEvent(spookAmount) { 
+            if (!gameActive) return;
+            spookLevel = Math.min(spookLevel + spookAmount, maxSpookLevel);
+            updateUI();
+            const events = ["A cupboard door creaks!", "The lights dim for a moment!", "A faint sweet smell...", "A tiny whisper!"];
+            if (Math.random() < 0.3) {
+                messageBox.textContent = `Mischief! ${events[Math.floor(Math.random() * events.length)]}`;
+            }
+            if (spookLevel >= maxSpookLevel) {
+                gameOver(false, "The Sweetheart got too spooked and hid!");
+            }
+        }
+
+        function makeGuess(sweetheartId) {
+            if (!gameActive) return;
+            if (journalEvidence.size !== 3) {
+                messageBox.textContent = "Please log exactly 3 pieces of evidence before guessing.";
+                return;
+            }
+
+            const guessedSweetheart = SWEETHEARTS.find(sh => sh.id === sweetheartId);
+            const actualSweetheart = currentSweetheart; 
+            const actualSweetheartEvidenceSet = new Set(actualSweetheart.evidence);
+            
+            let feedbackMessage = "";
+
+            if (guessedSweetheart.id === actualSweetheart.id) {
+                let matchingEvidenceCount = 0;
+                journalEvidence.forEach(evId => {
+                    if (actualSweetheartEvidenceSet.has(evId)) {
+                        matchingEvidenceCount++;
+                    }
+                });
+
+                if (matchingEvidenceCount === 3) {
+                    feedbackMessage = `Correct! It was ${actualSweetheart.name}! They love ${actualSweetheart.snack}.`;
+                    gameOver(true, feedbackMessage);
+                    updateHighScore(1);
+                } else {
+                    feedbackMessage = `You correctly identified ${actualSweetheart.name}, but the evidence in your journal wasn't quite right for them. Double-check your clues next time!`;
+                    gameOver(false, feedbackMessage);
+                }
+            } else {
+                let messageParts = [];
+                messageParts.push(`Oops! It wasn't ${guessedSweetheart.name}. The true Sweetheart was ${actualSweetheart.name}.`);
+
+                const playerEvidenceInActualSet = [];
+                const playerEvidenceNotInActualSet = [];
+                const missingEvidenceForActual = [];
+
+                journalEvidence.forEach(evId => {
+                    if (actualSweetheartEvidenceSet.has(evId)) {
+                        playerEvidenceInActualSet.push(EVIDENCE_TYPES[evId].name);
+                    } else {
+                        playerEvidenceNotInActualSet.push(EVIDENCE_TYPES[evId].name);
+                    }
+                });
+
+                actualSweetheart.evidence.forEach(actualEvId => {
+                    if (!journalEvidence.has(actualEvId)) {
+                        missingEvidenceForActual.push(EVIDENCE_TYPES[actualEvId].name);
+                    }
+                });
+
+                if (playerEvidenceInActualSet.length > 0) {
+                    messageParts.push(`You correctly noted: ${playerEvidenceInActualSet.join(', ')} which ${actualSweetheart.name} does exhibit.`);
+                }
+                if (playerEvidenceNotInActualSet.length > 0) {
+                    messageParts.push(`However, ${playerEvidenceNotInActualSet.join(', ')} ${playerEvidenceNotInActualSet.length > 1 ? "are" : "is"} not typically associated with ${actualSweetheart.name}.`);
+                }
+                if (missingEvidenceForActual.length > 0) {
+                    messageParts.push(`You might have missed that ${actualSweetheart.name} also shows signs of: ${missingEvidenceForActual.join(', ')}.`);
+                }
+                
+                if (playerEvidenceInActualSet.length === 0 && playerEvidenceNotInActualSet.length > 0) {
+                     messageParts.push(`It seems none of the evidence you logged matched ${actualSweetheart.name}.`);
+                }
+
+                feedbackMessage = messageParts.join(" ");
+                gameOver(false, feedbackMessage);
+            }
+        }
+
+
+        async function updateHighScore(points) { 
+            if (!dbUserRef || !isAuthReady || !userId) return;
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const userDoc = await transaction.get(dbUserRef);
+                    let newHighScore = points;
+                    if (userDoc.exists()) {
+                        newHighScore = (userDoc.data().highScore || 0) + points;
+                    }
+                    transaction.set(dbUserRef, { highScore: newHighScore, lastPlayed: serverTimestamp() }, { merge: true });
+                    highScoreEl.textContent = `High Score: ${newHighScore}`;
+                });
+            } catch (error) { console.error("Error updating high score:", error); }
+        }
+
+        async function loadHighScore() { 
+            if (!dbUserRef || !isAuthReady || !userId) {
+                highScoreEl.textContent = "High Score: N/A (Offline)"; return;
+            }
+            try {
+                const userDoc = await getDoc(dbUserRef);
+                highScoreEl.textContent = `High Score: ${userDoc.exists() ? (userDoc.data().highScore || 0) : 0}`;
+            } catch (error) {
+                console.error("Error loading high score:", error);
+                highScoreEl.textContent = "High Score: Error";
+            }
+        }
+
+        function gameOver(win, messageText) { 
+            gameActive = false;
+            if (isPointerLocked && document.exitPointerLock) {
+                 document.exitPointerLock(); 
+            }
+            if (audioInitialized && Tone.Transport.state === "started") {
+                Tone.Transport.stop(); 
+            }
+            modalTitle.textContent = win ? "Congratulations!" : "Oh no!";
+            modalMessage.textContent = messageText; 
+            modalSnack.textContent = win ? `${currentSweetheart.name} is happy with their ${currentSweetheart.snack}!` : `The correct Sweetheart was ${currentSweetheart.name}. They wanted ${currentSweetheart.snack}.`;
+            resultModal.classList.remove('hidden');
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
+
+        playAgainButton.onclick = () => {
+            resultModal.classList.add('hidden');
+            initGame();
+        };
+
+        const direction = new THREE.Vector3(); 
+        const rightVector = new THREE.Vector3(); 
+        let lastProximitySoundTime = 0; 
+
+        function animate() {
+            animationFrameId = requestAnimationFrame(animate);
+            if (!gameActive && resultModal.classList.contains('hidden')) {} 
+            else if (!gameActive && !resultModal.classList.contains('hidden')) {}
+
+            if (gameActive && isPointerLocked) {
+                camera.getWorldDirection(direction);
+                direction.y = 0; 
+                direction.normalize();
+
+                rightVector.crossVectors(camera.up, direction).normalize(); 
+                rightVector.y = 0; 
+                rightVector.normalize();
+
+                let deltaX = 0;
+                let deltaZ = 0;
+
+                if (keysPressed['w']) deltaZ -= moveSpeed;
+                if (keysPressed['s']) deltaZ += moveSpeed;
+                if (keysPressed['a']) deltaX -= moveSpeed;
+                if (keysPressed['d']) deltaX += moveSpeed;
+
+                camera.position.addScaledVector(direction, deltaZ * -1); 
+                
+                const cameraRight = new THREE.Vector3();
+                cameraRight.setFromMatrixColumn(camera.matrix, 0); 
+                cameraRight.y = 0; 
+                cameraRight.normalize();
+                camera.position.addScaledVector(cameraRight, deltaX);
+
+                const halfRoomW = ROOM_WIDTH / 2 - 0.5; 
+                const halfRoomD = ROOM_DEPTH / 2 - 0.5;
+                camera.position.x = Math.max(-halfRoomW, Math.min(halfRoomW, camera.position.x));
+                camera.position.z = Math.max(-halfRoomD, Math.min(halfRoomD, camera.position.z));
+                camera.position.y = CAMERA_HEIGHT; 
+            }
+
+            let playProximitySound = false;
+            let makeCrosshairGlow = false;
+
+            evidenceObjects3D.forEach(evObj => {
+                if (!evObj.mesh.userData.found) {
+                    evObj.mesh.material.emissiveIntensity = 0.7; 
+                    evObj.mesh.material.emissive.setHSL(
+                        ( (Date.now() * 0.0002) + (evObj.mesh.position.x + evObj.mesh.position.z) * 0.05 ) % 1, 
+                        0.9, 
+                        0.55 
+                    );
+
+                    if (currentTool && currentTool.evidence === evObj.evidenceData.id) {
+                        const distance = camera.position.distanceTo(evObj.mesh.position);
+                        if (distance < INTERACTION_DISTANCE_3D) {
+                            evObj.mesh.material.opacity = 0.6 + Math.sin(Date.now() * 0.005) * 0.2; 
+                            playProximitySound = true; 
+                            makeCrosshairGlow = true; 
+                        } else {
+                            evObj.mesh.material.opacity = 0.35; 
+                        }
+                    } else {
+                        evObj.mesh.material.opacity = 0.35; 
+                    }
+                } else {
+                    evObj.mesh.material.opacity = 1;
+                }
+            });
+
+            if (crosshairEl) {
+                if (makeCrosshairGlow && currentTool) {
+                    crosshairEl.style.borderColor = currentTool.color;
+                    crosshairEl.style.boxShadow = `0 0 12px ${currentTool.color}, 0 0 5px ${currentTool.color} inset`;
+                } else {
+                    crosshairEl.style.borderColor = 'white';
+                    crosshairEl.style.boxShadow = 'none';
+                }
+            }
+
+
+            const now = Tone.now();
+            if (playProximitySound && audioInitialized && proximitySynth && (now - lastProximitySoundTime > 0.5) ) { 
+                proximitySynth.triggerAttackRelease("A3", "16n", now); 
+                lastProximitySoundTime = now;
+            }
+            
+            if (sweetheartMesh) {
+                sweetheartMesh.position.y = CAMERA_HEIGHT + Math.sin(Date.now() * 0.001) * 0.1;
+            }
+
+            // Animate floating orbs
+            floatingOrbs.forEach(orb => {
+                orb.position.x += orb.userData.dx;
+                orb.position.y += orb.userData.dy;
+                orb.position.z += orb.userData.dz;
+
+                // Bounce off conceptual room boundaries
+                if (Math.abs(orb.position.x) > ROOM_WIDTH / 2 - 0.2) orb.userData.dx *= -1;
+                if (orb.position.y < 0.2 || orb.position.y > ROOM_HEIGHT - 0.2) orb.userData.dy *= -1;
+                if (Math.abs(orb.position.z) > ROOM_DEPTH / 2 - 0.2) orb.userData.dz *= -1;
+                
+                // Make them slowly pulse opacity
+                orb.material.opacity = 0.3 + Math.sin(Date.now() * 0.0005 + orb.position.x) * 0.2;
+            });
+
+
+            renderer.render(scene, camera);
+        }
+
+        function handleResize() {
+            if (!renderer || !camera || !canvasContainer) return;
+            const width = canvasContainer.clientWidth;
+            const height = width / (16/9); 
+            canvasContainer.style.height = `${height}px`; 
+
+            renderer.setSize(width, height);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+        }
+
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('DOMContentLoaded', () => {
+             setTimeout(handleResize, 100); 
+        });
+
+    </script>
+</body>
+</html>
