@@ -193,6 +193,41 @@
             font-style: italic;
             margin-top: 5px;
         }
+        .how-to-play {
+            background-color: #fffada; /* Light yellow for tips */
+            border: 2px solid #ffe4b5; /* Moccasin border */
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+            width: 100%;
+            text-align: left;
+        }
+        .how-to-play h3 {
+            color: #800000; /* Maroon */
+            font-family: 'Comic Neue', cursive;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .how-to-play ul {
+            list-style-type: disc;
+            margin-left: 20px;
+            font-size: 0.9em;
+        }
+        .how-to-play li {
+            margin-bottom: 4px;
+        }
+        .how-to-play strong {
+            color: #6a0dad; /* Purple for emphasis */
+        }
+        .toggle-button {
+            background-color: #e6e6fa;
+            color: #483d8b;
+            border: 1px solid #c599ff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -219,6 +254,44 @@
                     <div id="spook-meter-bar" class="spook-meter-bar">0%</div>
                 </div>
             </div>
+
+            <div class="ui-panel">
+                <button id="toggleHowToPlay" class="toggle-button">How to Play / Tips (Show)</button>
+                <div id="howToPlayContent" class="how-to-play hidden">
+                    <h3>How to Play Sweetheart Sleuths!</h3>
+                    <ul>
+                        <li><strong>Objective:</strong> Identify the Sweetheart in the bakery by finding <strong>3 pieces of evidence</strong>.</li>
+                        <li><strong>Movement:</strong> Click the 3D view to activate mouse-look. Use <strong>WASD</strong> keys to move around. Press <strong>ESC</strong> to release mouse and interact with UI.</li>
+                        <li><strong>Tools:</strong> Select a tool from the "Tools" panel. Each tool detects a specific type of evidence.
+                            <ul>
+                                <li>Sparkle Wand: Shimmering Trails</li>
+                                <li>Melody Listener: Faint Giggles</li>
+                                <li>Magnifying Glass: Tiny Treat Crumbs</li>
+                                <li>Aroma Sniffer: Sweet Aroma</li>
+                                <li>Light Flicker Detector: Flickering Lights</li>
+                            </ul>
+                        </li>
+                        <li><strong>Finding Evidence:</strong>
+                            <ul>
+                                <li>When your <strong>crosshair glows</strong> the color of your active tool, you're near the correct evidence type for that tool!</li>
+                                <li><strong>Click</strong> while aiming at the glowing evidence sphere to collect it.</li>
+                                <li>Collected evidence is added to your <strong>Detective's Journal</strong>.</li>
+                            </ul>
+                        </li>
+                         <li><strong>Journal:</strong>
+                            <ul>
+                                <li>You can manually add/remove evidence types to your journal using the buttons below the list.</li>
+                                <li>The "Which Sweetheart is it?" list will filter based on your logged evidence.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Guessing:</strong> Once you have <strong>3 pieces of evidence</strong> in your journal, make a guess from the filtered list of Sweethearts.</li>
+                        <li><strong>Spook Meter:</strong> Finding evidence or making incorrect attempts can raise the Spook Meter. If it reaches 100%, the Sweetheart gets too spooked!</li>
+                        <li><strong>Win:</strong> Correctly guess the Sweetheart AND have their 3 unique evidences logged in your journal.</li>
+                    </ul>
+                </div>
+            </div>
+
+
             <div class="journal">
                 <h3 class="text-2xl font-semibold mb-2">Detective's Journal</h3>
                 <ul id="evidence-list" class="list-disc list-inside text-gray-700"></ul>
@@ -268,7 +341,7 @@
         let sweetheartMesh = null; 
         let floatingOrbs = []; 
         let wallDecorations = []; 
-        let windowPaneTexture; // For spooky tree landscape
+        let windowPaneTexture; 
 
         const INTERACTION_DISTANCE_3D = 4; 
         const CAMERA_HEIGHT = 1.6; 
@@ -301,6 +374,9 @@
         const crosshairInnerEl = document.getElementById('crosshair'); 
         
         const foundPopupEl = document.getElementById('found-popup'); 
+        const toggleHowToPlayButton = document.getElementById('toggleHowToPlay');
+        const howToPlayContentEl = document.getElementById('howToPlayContent');
+
 
         let currentTool = null;
         let spookLevel = 0;
@@ -366,39 +442,36 @@
             canvas.width = 256;
             canvas.height = 256;
 
-            // Dark sky gradient
             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#2c1f3a'); // Dark Purple (top)
-            gradient.addColorStop(0.7, '#483d8b'); // DarkSlateBlue (middle)
-            gradient.addColorStop(1, '#6a0dad');   // Purple (bottom horizon)
+            gradient.addColorStop(0, '#2c1f3a'); 
+            gradient.addColorStop(0.7, '#483d8b'); 
+            gradient.addColorStop(1, '#6a0dad');   
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Faint moon
-            ctx.fillStyle = 'rgba(240, 240, 200, 0.3)'; // Pale yellow, semi-transparent
+            ctx.fillStyle = 'rgba(240, 240, 200, 0.3)'; 
             ctx.beginPath();
             ctx.arc(canvas.width * 0.75, canvas.height * 0.25, canvas.width * 0.15, 0, Math.PI * 2);
             ctx.fill();
 
-            // Spooky tree silhouettes
-            ctx.fillStyle = '#1a1a1a'; // Very dark grey/black
+            ctx.fillStyle = '#1a1a1a'; 
             function drawTree(x, y, height, branches) {
                 ctx.beginPath();
-                ctx.moveTo(x, y); // Base of trunk
+                ctx.moveTo(x, y); 
                 ctx.lineTo(x - height * 0.05, y - height * 0.3);
                 ctx.lineTo(x + height * 0.05, y - height * 0.3);
                 ctx.lineTo(x, y);
-                ctx.fill(); // Trunk
+                ctx.fill(); 
 
                 for (let i = 0; i < branches; i++) {
                     ctx.beginPath();
                     const startX = x + (Math.random() - 0.5) * height * 0.02;
                     const startY = y - height * (0.2 + Math.random() * 0.1);
                     ctx.moveTo(startX, startY);
-                    const angle = (Math.random() - 0.5) * Math.PI * 0.6 + (Math.random() > 0.5 ? Math.PI : 0) ; // More varied angles
+                    const angle = (Math.random() - 0.5) * Math.PI * 0.6 + (Math.random() > 0.5 ? Math.PI : 0) ; 
                     const length = height * (0.2 + Math.random() * 0.3);
                     ctx.lineTo(startX + Math.cos(angle) * length * 0.3, startY + Math.sin(angle) * length);
-                    ctx.lineTo(startX + Math.cos(angle) * length * 0.3 + (Math.random()-0.5)*10, startY + Math.sin(angle) * length + (Math.random()-0.5)*5); // Jagged end
+                    ctx.lineTo(startX + Math.cos(angle) * length * 0.3 + (Math.random()-0.5)*10, startY + Math.sin(angle) * length + (Math.random()-0.5)*5); 
                     ctx.lineWidth = Math.random() * 2 + 1;
                     ctx.stroke();
                 }
@@ -407,7 +480,6 @@
             drawTree(canvas.width * 0.5, canvas.height * 0.9, canvas.height * 0.5, 2 + Math.floor(Math.random()*2));
             drawTree(canvas.width * 0.85, canvas.height, canvas.height * 0.7, 3 + Math.floor(Math.random()*3));
             
-            // Tiny stars
             ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
             for(let i=0; i<30; i++) {
                 ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height * 0.6, 1, 1);
@@ -421,11 +493,10 @@
             const ctx = canvas.getContext('2d');
             canvas.width = 128;
             canvas.height = 128;
-            ctx.fillStyle = '#f0e8ff'; // Light lavender background for portrait
+            ctx.fillStyle = '#f0e8ff'; 
             ctx.fillRect(0,0,canvas.width, canvas.height);
 
             if (characterType === 'kitty') {
-                // Head
                 ctx.fillStyle = 'white';
                 ctx.beginPath();
                 ctx.arc(64, 70, 40, 0, Math.PI * 2);
@@ -433,66 +504,54 @@
                 ctx.strokeStyle = '#aaaaaa';
                 ctx.stroke();
 
-                // Bow
-                ctx.fillStyle = '#FFC0CB'; // Pink
+                ctx.fillStyle = '#FFC0CB'; 
                 ctx.beginPath();
                 ctx.ellipse(35, 45, 15, 10, -Math.PI / 6, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.beginPath();
-                ctx.ellipse(25, 40, 8, 8, 0, 0, Math.PI * 2); // Knot
+                ctx.ellipse(25, 40, 8, 8, 0, 0, Math.PI * 2); 
                 ctx.fill();
 
-                // Eyes
                 ctx.fillStyle = 'black';
-                ctx.beginPath(); ctx.arc(50, 65, 4, 0, Math.PI * 2); ctx.fill(); // Left
-                ctx.beginPath(); ctx.arc(78, 65, 4, 0, Math.PI * 2); ctx.fill(); // Right
-                // Nose
-                ctx.fillStyle = '#FFD700'; // Gold/Yellow
+                ctx.beginPath(); ctx.arc(50, 65, 4, 0, Math.PI * 2); ctx.fill(); 
+                ctx.beginPath(); ctx.arc(78, 65, 4, 0, Math.PI * 2); ctx.fill(); 
+                ctx.fillStyle = '#FFD700'; 
                 ctx.beginPath(); ctx.ellipse(64, 75, 5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
             } else if (characterType === 'keropi') {
-                // Head
-                ctx.fillStyle = '#90EE90'; // LightGreen
+                ctx.fillStyle = '#90EE90'; 
                 ctx.beginPath();
                 ctx.arc(64, 64, 45, 0, Math.PI * 2);
                 ctx.fill();
-                // Eyes
                 ctx.fillStyle = 'white';
-                ctx.beginPath(); ctx.arc(44, 50, 18, 0, Math.PI * 2); ctx.fill(); // Left white
-                ctx.beginPath(); ctx.arc(84, 50, 18, 0, Math.PI * 2); ctx.fill(); // Right white
+                ctx.beginPath(); ctx.arc(44, 50, 18, 0, Math.PI * 2); ctx.fill(); 
+                ctx.beginPath(); ctx.arc(84, 50, 18, 0, Math.PI * 2); ctx.fill(); 
                 ctx.fillStyle = 'black';
-                ctx.beginPath(); ctx.arc(44, 50, 8, 0, Math.PI * 2); ctx.fill(); // Left pupil
-                ctx.beginPath(); ctx.arc(84, 50, 8, 0, Math.PI * 2); ctx.fill(); // Right pupil
-                // Mouth
-                ctx.strokeStyle = '#D9534F'; // Reddish
+                ctx.beginPath(); ctx.arc(44, 50, 8, 0, Math.PI * 2); ctx.fill(); 
+                ctx.beginPath(); ctx.arc(84, 50, 8, 0, Math.PI * 2); ctx.fill(); 
+                ctx.strokeStyle = '#D9534F'; 
                 ctx.lineWidth = 3;
                 ctx.beginPath(); ctx.moveTo(50, 85); ctx.lineTo(64, 75); ctx.lineTo(78, 85); ctx.stroke();
             } else if (characterType === 'kuromi') {
-                 // Head base (light grey for contrast)
                 ctx.fillStyle = '#d3d3d3'; 
                 ctx.beginPath(); ctx.arc(64, 75, 38, 0, Math.PI * 2); ctx.fill();
 
-                // Jester Hat
-                ctx.fillStyle = '#301934'; // Dark purple for hat
+                ctx.fillStyle = '#301934'; 
                 ctx.beginPath();
-                ctx.moveTo(64, 15); // Top point
-                ctx.lineTo(24, 55); // Left point
-                ctx.arcTo(64, 95, 104, 55, 50); // Bottom curve of hat
-                ctx.lineTo(104, 55); // Right point
+                ctx.moveTo(64, 15); 
+                ctx.lineTo(24, 55); 
+                ctx.arcTo(64, 95, 104, 55, 50); 
+                ctx.lineTo(104, 55); 
                 ctx.closePath();
                 ctx.fill();
-                // Skull
-                ctx.fillStyle = '#FFC0CB'; // Pink
-                ctx.beginPath(); ctx.arc(64, 45, 8, 0, Math.PI * 2); ctx.fill(); // Skull head
-                // Simple crossbones for skull
+                ctx.fillStyle = '#FFC0CB'; 
+                ctx.beginPath(); ctx.arc(64, 45, 8, 0, Math.PI * 2); ctx.fill(); 
                 ctx.strokeStyle = '#FFC0CB'; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(58, 50); ctx.lineTo(70, 50); ctx.stroke(); // Horizontal
-                ctx.beginPath(); ctx.moveTo(64, 42); ctx.lineTo(64, 53); ctx.stroke(); // Vertical
+                ctx.beginPath(); ctx.moveTo(58, 50); ctx.lineTo(70, 50); ctx.stroke(); 
+                ctx.beginPath(); ctx.moveTo(64, 42); ctx.lineTo(64, 53); ctx.stroke(); 
                 
-                // Eyes (on the head, below hat)
                 ctx.fillStyle = 'black';
-                ctx.beginPath(); ctx.ellipse(53, 72, 5, 7, Math.PI / 8, 0, Math.PI * 2); ctx.fill(); // Left
-                ctx.beginPath(); ctx.ellipse(75, 72, 5, 7, -Math.PI / 8, 0, Math.PI * 2); ctx.fill(); // Right
-                // Smile
+                ctx.beginPath(); ctx.ellipse(53, 72, 5, 7, Math.PI / 8, 0, Math.PI * 2); ctx.fill(); 
+                ctx.beginPath(); ctx.ellipse(75, 72, 5, 7, -Math.PI / 8, 0, Math.PI * 2); ctx.fill(); 
                 ctx.strokeStyle = 'black'; ctx.lineWidth = 1.5;
                 ctx.beginPath(); ctx.arc(64, 80, 10, 0.2 * Math.PI, 0.8 * Math.PI); ctx.stroke();
             }
@@ -503,7 +562,7 @@
         function initThreeJS() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x3a2f4a); 
-            windowPaneTexture = createWindowPaneTexture(); // Create window texture once
+            windowPaneTexture = createWindowPaneTexture(); 
 
             const aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
             camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
@@ -630,6 +689,15 @@
             document.addEventListener('mousemove', onMouseMove, false);
             document.addEventListener('keydown', onKeyDown, false);
             document.addEventListener('keyup', onKeyUp, false);
+            
+            // Toggle for How to Play
+            if(toggleHowToPlayButton && howToPlayContentEl) {
+                toggleHowToPlayButton.addEventListener('click', () => {
+                    const isHidden = howToPlayContentEl.classList.contains('hidden');
+                    howToPlayContentEl.classList.toggle('hidden');
+                    toggleHowToPlayButton.textContent = isHidden ? "How to Play / Tips (Hide)" : "How to Play / Tips (Show)";
+                });
+            }
         }
 
         function pointerLockChange() {
@@ -841,13 +909,12 @@
                 windowGroup.add(rightFrame);
 
                 const paneGeo = new THREE.PlaneGeometry(windowWidth, windowHeight);
-                // Use the pre-generated spooky tree texture for window panes
                 const paneMat = new THREE.MeshStandardMaterial({ 
-                    map: windowPaneTexture, // Use the landscape texture
+                    map: windowPaneTexture, 
                     transparent: true, 
-                    opacity: 0.85, // Slightly more opaque to see texture
+                    opacity: 0.85, 
                     side: THREE.DoubleSide,
-                    emissive: 0x101020, // Very subtle blue/purple emissive from the "night"
+                    emissive: 0x101020, 
                     emissiveIntensity: 0.1
                 });
                 const pane = new THREE.Mesh(paneGeo, paneMat);
@@ -929,11 +996,11 @@
                 decorationGroup.rotation.y = Math.PI; 
             } else if (wallOrientation === 'left') {
                 decorationGroup.position.x = wallMesh.position.x - wallSideDepth / 2 - 0.011;
-                decorationGroup.position.z = (Math.random()-0.5) * (wallMesh.geometry.parameters.width -1.5); // Ensure it's on the wall
+                decorationGroup.position.z = (Math.random()-0.5) * (wallMesh.geometry.parameters.width -1.5); 
                 decorationGroup.rotation.y = Math.PI / 2;
             } else if (wallOrientation === 'right') {
                 decorationGroup.position.x = wallMesh.position.x + wallSideDepth / 2 + 0.011;
-                decorationGroup.position.z = (Math.random()-0.5) * (wallMesh.geometry.parameters.width -1.5); // Ensure it's on the wall
+                decorationGroup.position.z = (Math.random()-0.5) * (wallMesh.geometry.parameters.width -1.5); 
                 decorationGroup.rotation.y = -Math.PI / 2;
             }
             
