@@ -7,11 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Comic+Neue:wght@700&family=Creepster&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #e0d8f0; /* Lighter Lavender background for page */
+            background-color: #e0d8f0; 
             color: #333;
             display: flex;
             flex-direction: column;
@@ -32,9 +32,9 @@
             width: 100%;
             max-width: 900px; 
             aspect-ratio: 16 / 9;
-            background-color: #2c1f3a; /* Dark purple for canvas background */
+            background-color: #2c1f3a; 
             border-radius: 15px;
-            border: 3px solid #ab87ff; /* Brighter purple border */
+            border: 3px solid #ab87ff; 
             cursor: grab; 
             margin-bottom: 10px; 
         }
@@ -42,8 +42,8 @@
             cursor: none; 
         }
         .game-ui-container { 
-            background-color: #f5e6ff; /* Lighter lavender for UI */
-            border: 5px solid #c599ff; /* Medium purple border */
+            background-color: #f5e6ff; 
+            border: 5px solid #c599ff; 
             border-radius: 20px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.15);
             padding: 15px; 
@@ -66,9 +66,9 @@
             text-align: center;
         }
         .tool-button, .action-button, .evidence-button, .guess-button {
-            background-color: #d8bfff; /* Light lavender buttons */
-            color: #4a0072; /* Dark purple text */
-            border: 2px solid #b085f5; /* Darker lavender border */
+            background-color: #d8bfff; 
+            color: #4a0072; 
+            border: 2px solid #b085f5; 
             padding: 8px 12px; 
             margin: 3px; 
             border-radius: 8px;
@@ -82,20 +82,20 @@
             transform: translateY(-2px);
         }
         .tool-button.active {
-            background-color: #8a2be2; /* BlueViolet */
+            background-color: #8a2be2; 
             color: white;
             box-shadow: 0 0 10px #8a2be2;
         }
         .journal {
-            background-color: #faf0e6; /* Linen - slightly off-white */
-            border: 2px solid #d3b6a0; /* Dusty rose gold */
+            background-color: #faf0e6; 
+            border: 2px solid #d3b6a0; 
             padding: 10px;
             border-radius: 10px;
             margin-top: 10px;
             width: 100%;
         }
         .journal h3 {
-            color: #8b4513; /* SaddleBrown */
+            color: #8b4513; 
             font-family: 'Comic Neue', cursive;
         }
         .spook-meter-container {
@@ -108,7 +108,7 @@
         .spook-meter-bar {
             height: 20px; 
             width: 0%;
-            background-color: #ff7f7f; /* Coral pink for spook */
+            background-color: #ff7f7f; 
             border-radius: 7px;
             transition: width 0.5s ease-in-out;
             text-align: center;
@@ -117,8 +117,8 @@
             font-weight: bold;
         }
         .message-box {
-            background-color: #e6e6fa; /* Lavender */
-            color: #483d8b; /* DarkSlateBlue */
+            background-color: #e6e6fa; 
+            color: #483d8b; 
             padding: 8px;
             border-radius: 8px;
             margin-top: 8px;
@@ -127,41 +127,53 @@
         }
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(40,20,60,0.7); /* Darker purple overlay */
+            background-color: rgba(40,20,60,0.7); 
             display: flex;
             justify-content: center; align-items: center; z-index: 1000;
         }
         .modal-content {
-            background-color: #f0e8ff; /* Very light lavender */
+            background-color: #f0e8ff; 
             padding: 30px; border-radius: 15px;
             text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             border: 3px solid #ab87ff;
         }
-        .modal-content h2 { font-family: 'Comic Neue', cursive; color: #6a0dad; margin-bottom: 20px; } /* Purple */
+        .modal-content h2 { font-family: 'Comic Neue', cursive; color: #6a0dad; margin-bottom: 20px; } 
         .hidden { display: none; }
         #auth-status, #user-id-display { font-size: 0.8em; color: #6b7280; margin-top: 5px; }
         #user-id-display { word-break: break-all; }
-        h1 { font-family: 'Comic Neue', cursive; color: #6a0dad; } /* Main title purple */
-        #crosshair {
+        h1 { 
+            font-family: 'Creepster', cursive; 
+            color: #580040; 
+            letter-spacing: 2px; 
+        } 
+        
+        #crosshair-overlay {
             position: fixed;
-            top: 50%;
-            left: 50%;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none; 
+            justify-content: center;
+            align-items: center;
+            z-index: 998; 
+            pointer-events: none; 
+        }
+        #crosshair { 
             width: 10px;
             height: 10px;
             border: 1px solid white; 
             border-radius: 50%;
-            transform: translate(-50%, -50%);
             mix-blend-mode: difference; 
-            z-index: 998; 
-            display: none; 
             transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; 
         }
+
         #found-popup {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -60%); 
-            background-color: rgba(220, 200, 255, 0.9); /* Lighter lavender popup */
+            background-color: rgba(220, 200, 255, 0.9); 
             color: #4a0072; 
             padding: 15px 25px;
             border-radius: 12px;
@@ -177,7 +189,7 @@
             opacity: 1;
         }
         .no-match-message {
-            color: #8b0000; /* DarkRed */
+            color: #8b0000; 
             font-style: italic;
             margin-top: 5px;
         }
@@ -185,14 +197,16 @@
 </head>
 <body>
     <div class="game-super-container">
-        <h1 class="text-3xl md:text-4xl font-bold my-3 md:my-4">Sweetheart Sleuths 3D</h1> 
+        <h1 class="text-3xl md:text-4xl font-bold my-3 md:my-4">Sweetheart Sleuths</h1> 
         <div id="auth-status">Initializing...</div>
         <div id="user-id-display" class="mb-1"></div>
         <div id="high-score" class="text-lg text-purple-600 font-semibold mb-2">High Score: 0</div>
 
         <div id="threejs-canvas-container">
             </div>
-        <div id="crosshair"></div>
+        <div id="crosshair-overlay">
+            <div id="crosshair"></div>
+        </div>
         <div id="found-popup" class="hidden"></div> 
         <div class="game-ui-container">
             <div class="ui-panel">
@@ -253,7 +267,8 @@
         let evidenceObjects3D = []; 
         let sweetheartMesh = null; 
         let floatingOrbs = []; 
-        let wallDecorations = []; // To keep track of decorations for potential cleanup
+        let wallDecorations = []; 
+        let windowPaneTexture; // For spooky tree landscape
 
         const INTERACTION_DISTANCE_3D = 4; 
         const CAMERA_HEIGHT = 1.6; 
@@ -281,7 +296,10 @@
         const modalSnack = document.getElementById('modalSnack');
         const playAgainButton = document.getElementById('playAgainButton');
         const canvasContainer = document.getElementById('threejs-canvas-container');
-        const crosshairEl = document.getElementById('crosshair');
+        
+        const crosshairOverlayEl = document.getElementById('crosshair-overlay');
+        const crosshairInnerEl = document.getElementById('crosshair'); 
+        
         const foundPopupEl = document.getElementById('found-popup'); 
 
         let currentTool = null;
@@ -341,10 +359,151 @@
                 }
             }
         });
+        
+        function createWindowPaneTexture() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 256;
+            canvas.height = 256;
+
+            // Dark sky gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#2c1f3a'); // Dark Purple (top)
+            gradient.addColorStop(0.7, '#483d8b'); // DarkSlateBlue (middle)
+            gradient.addColorStop(1, '#6a0dad');   // Purple (bottom horizon)
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Faint moon
+            ctx.fillStyle = 'rgba(240, 240, 200, 0.3)'; // Pale yellow, semi-transparent
+            ctx.beginPath();
+            ctx.arc(canvas.width * 0.75, canvas.height * 0.25, canvas.width * 0.15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Spooky tree silhouettes
+            ctx.fillStyle = '#1a1a1a'; // Very dark grey/black
+            function drawTree(x, y, height, branches) {
+                ctx.beginPath();
+                ctx.moveTo(x, y); // Base of trunk
+                ctx.lineTo(x - height * 0.05, y - height * 0.3);
+                ctx.lineTo(x + height * 0.05, y - height * 0.3);
+                ctx.lineTo(x, y);
+                ctx.fill(); // Trunk
+
+                for (let i = 0; i < branches; i++) {
+                    ctx.beginPath();
+                    const startX = x + (Math.random() - 0.5) * height * 0.02;
+                    const startY = y - height * (0.2 + Math.random() * 0.1);
+                    ctx.moveTo(startX, startY);
+                    const angle = (Math.random() - 0.5) * Math.PI * 0.6 + (Math.random() > 0.5 ? Math.PI : 0) ; // More varied angles
+                    const length = height * (0.2 + Math.random() * 0.3);
+                    ctx.lineTo(startX + Math.cos(angle) * length * 0.3, startY + Math.sin(angle) * length);
+                    ctx.lineTo(startX + Math.cos(angle) * length * 0.3 + (Math.random()-0.5)*10, startY + Math.sin(angle) * length + (Math.random()-0.5)*5); // Jagged end
+                    ctx.lineWidth = Math.random() * 2 + 1;
+                    ctx.stroke();
+                }
+            }
+            drawTree(canvas.width * 0.2, canvas.height * 0.95, canvas.height * 0.6, 3 + Math.floor(Math.random()*3));
+            drawTree(canvas.width * 0.5, canvas.height * 0.9, canvas.height * 0.5, 2 + Math.floor(Math.random()*2));
+            drawTree(canvas.width * 0.85, canvas.height, canvas.height * 0.7, 3 + Math.floor(Math.random()*3));
+            
+            // Tiny stars
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            for(let i=0; i<30; i++) {
+                ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height * 0.6, 1, 1);
+            }
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createCharacterPortraitTexture(characterType) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 128;
+            canvas.height = 128;
+            ctx.fillStyle = '#f0e8ff'; // Light lavender background for portrait
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+
+            if (characterType === 'kitty') {
+                // Head
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(64, 70, 40, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#aaaaaa';
+                ctx.stroke();
+
+                // Bow
+                ctx.fillStyle = '#FFC0CB'; // Pink
+                ctx.beginPath();
+                ctx.ellipse(35, 45, 15, 10, -Math.PI / 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(25, 40, 8, 8, 0, 0, Math.PI * 2); // Knot
+                ctx.fill();
+
+                // Eyes
+                ctx.fillStyle = 'black';
+                ctx.beginPath(); ctx.arc(50, 65, 4, 0, Math.PI * 2); ctx.fill(); // Left
+                ctx.beginPath(); ctx.arc(78, 65, 4, 0, Math.PI * 2); ctx.fill(); // Right
+                // Nose
+                ctx.fillStyle = '#FFD700'; // Gold/Yellow
+                ctx.beginPath(); ctx.ellipse(64, 75, 5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+            } else if (characterType === 'keropi') {
+                // Head
+                ctx.fillStyle = '#90EE90'; // LightGreen
+                ctx.beginPath();
+                ctx.arc(64, 64, 45, 0, Math.PI * 2);
+                ctx.fill();
+                // Eyes
+                ctx.fillStyle = 'white';
+                ctx.beginPath(); ctx.arc(44, 50, 18, 0, Math.PI * 2); ctx.fill(); // Left white
+                ctx.beginPath(); ctx.arc(84, 50, 18, 0, Math.PI * 2); ctx.fill(); // Right white
+                ctx.fillStyle = 'black';
+                ctx.beginPath(); ctx.arc(44, 50, 8, 0, Math.PI * 2); ctx.fill(); // Left pupil
+                ctx.beginPath(); ctx.arc(84, 50, 8, 0, Math.PI * 2); ctx.fill(); // Right pupil
+                // Mouth
+                ctx.strokeStyle = '#D9534F'; // Reddish
+                ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.moveTo(50, 85); ctx.lineTo(64, 75); ctx.lineTo(78, 85); ctx.stroke();
+            } else if (characterType === 'kuromi') {
+                 // Head base (light grey for contrast)
+                ctx.fillStyle = '#d3d3d3'; 
+                ctx.beginPath(); ctx.arc(64, 75, 38, 0, Math.PI * 2); ctx.fill();
+
+                // Jester Hat
+                ctx.fillStyle = '#301934'; // Dark purple for hat
+                ctx.beginPath();
+                ctx.moveTo(64, 15); // Top point
+                ctx.lineTo(24, 55); // Left point
+                ctx.arcTo(64, 95, 104, 55, 50); // Bottom curve of hat
+                ctx.lineTo(104, 55); // Right point
+                ctx.closePath();
+                ctx.fill();
+                // Skull
+                ctx.fillStyle = '#FFC0CB'; // Pink
+                ctx.beginPath(); ctx.arc(64, 45, 8, 0, Math.PI * 2); ctx.fill(); // Skull head
+                // Simple crossbones for skull
+                ctx.strokeStyle = '#FFC0CB'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(58, 50); ctx.lineTo(70, 50); ctx.stroke(); // Horizontal
+                ctx.beginPath(); ctx.moveTo(64, 42); ctx.lineTo(64, 53); ctx.stroke(); // Vertical
+                
+                // Eyes (on the head, below hat)
+                ctx.fillStyle = 'black';
+                ctx.beginPath(); ctx.ellipse(53, 72, 5, 7, Math.PI / 8, 0, Math.PI * 2); ctx.fill(); // Left
+                ctx.beginPath(); ctx.ellipse(75, 72, 5, 7, -Math.PI / 8, 0, Math.PI * 2); ctx.fill(); // Right
+                // Smile
+                ctx.strokeStyle = 'black'; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.arc(64, 80, 10, 0.2 * Math.PI, 0.8 * Math.PI); ctx.stroke();
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
 
         function initThreeJS() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x3a2f4a); 
+            windowPaneTexture = createWindowPaneTexture(); // Create window texture once
 
             const aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
             camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
@@ -481,11 +640,11 @@
             if (lockElement === renderer.domElement) {
                 isPointerLocked = true;
                 canvasContainer.classList.add('pointer-locked');
-                crosshairEl.style.display = 'block';
+                if (crosshairOverlayEl) crosshairOverlayEl.style.display = 'flex'; 
             } else {
                 isPointerLocked = false;
                 canvasContainer.classList.remove('pointer-locked');
-                crosshairEl.style.display = 'none';
+                if (crosshairOverlayEl) crosshairOverlayEl.style.display = 'none'; 
                 keysPressed = {}; 
             }
         }
@@ -579,18 +738,18 @@
 
             if (type === 'ghost_cupcake') {
                 const cakeGeo = new THREE.CylinderGeometry(0.1, 0.15, 0.15, 12);
-                const cakeMat = new THREE.MeshStandardMaterial({ color: 0x704214 }); // Darker Brown cake
+                const cakeMat = new THREE.MeshStandardMaterial({ color: 0x704214 }); 
                 const cake = new THREE.Mesh(cakeGeo, cakeMat);
                 itemGroup.add(cake);
 
                 const frostingGeo = new THREE.SphereGeometry(0.12, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.8); 
-                const frostingMat = new THREE.MeshStandardMaterial({ color: 0xC8A2C8 }); // Lilac frosting
+                const frostingMat = new THREE.MeshStandardMaterial({ color: 0xC8A2C8 }); 
                 const frosting = new THREE.Mesh(frostingGeo, frostingMat);
                 frosting.position.y = 0.15;
                 itemGroup.add(frosting);
 
                 const eyeGeo = new THREE.SphereGeometry(0.02, 8, 8);
-                const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1a1a1a }); // Very dark eyes
+                const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1a1a1a }); 
                 const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
                 leftEye.position.set(-0.04, 0.2, 0.08);
                 itemGroup.add(leftEye);
@@ -612,22 +771,22 @@
 
                 const extrudeSettings = { depth: 0.02, bevelEnabled: false };
                 const cookieGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-                const cookieMat = new THREE.MeshStandardMaterial({ color: 0x2B1B17 }); // Almost black
+                const cookieMat = new THREE.MeshStandardMaterial({ color: 0x2B1B17 }); 
                 itemMesh = new THREE.Mesh(cookieGeo, cookieMat);
                 itemMesh.rotation.x = -Math.PI / 2; 
             } else if (type === 'web_lollipop') {
                 const stickGeo = new THREE.CylinderGeometry(0.01, 0.01, 0.25, 8);
-                const stickMat = new THREE.MeshStandardMaterial({ color: 0xDCDCDC }); // Light grey stick
+                const stickMat = new THREE.MeshStandardMaterial({ color: 0xDCDCDC }); 
                 const stick = new THREE.Mesh(stickGeo, stickMat);
                 stick.position.y = -0.125;
                 itemGroup.add(stick);
 
                 const candyGeo = new THREE.CircleGeometry(0.1, 16);
-                const candyMat = new THREE.MeshStandardMaterial({ color: 0x8A2BE2, side: THREE.DoubleSide }); // BlueViolet candy
+                const candyMat = new THREE.MeshStandardMaterial({ color: 0x8A2BE2, side: THREE.DoubleSide }); 
                 const candy = new THREE.Mesh(candyGeo, candyMat);
                 itemGroup.add(candy);
 
-                const webMat = new THREE.LineBasicMaterial({ color: 0xF5F5F5, linewidth: 1 }); // Off-white web
+                const webMat = new THREE.LineBasicMaterial({ color: 0xF5F5F5, linewidth: 1 }); 
                 const points = [];
                 for(let i=0; i < 8; i++) { 
                     points.push(new THREE.Vector3(0,0,0.001));
@@ -650,59 +809,66 @@
             }
         }
 
-        function createWindows(wallMesh, count = 2, wallOrientation = 'back') { // wallOrientation: 'back', 'front', 'left', 'right'
-            const wallWidth = (wallOrientation === 'left' || wallOrientation === 'right') ? wallMesh.geometry.parameters.depth : wallMesh.geometry.parameters.width;
+        function createWindows(wallMesh, count = 2, wallOrientation = 'back') { 
+            const wallIsVertical = (wallOrientation === 'left' || wallOrientation === 'right');
+            const wallLength = wallIsVertical ? wallMesh.geometry.parameters.width : wallMesh.geometry.parameters.width; 
+            const wallSideDepth = wallIsVertical ? wallMesh.geometry.parameters.depth : wallMesh.geometry.parameters.depth;
+
+
             const wallHeight = wallMesh.geometry.parameters.height;
             const windowWidth = 0.6;
             const windowHeight = 0.8;
-            const frameDepth = 0.05;
-            const spacing = (wallWidth - (count * windowWidth)) / (count + 1);
+            const frameThickness = 0.05; 
+            const frameDepth = 0.1;    
+
+            const spacing = (wallLength - (count * windowWidth)) / (count + 1);
 
             for (let i = 0; i < count; i++) {
                 const windowGroup = new THREE.Group();
                 
                 const frameMat = new THREE.MeshStandardMaterial({ color: 0x3A2D27 }); 
-                const topFrame = new THREE.Mesh(new THREE.BoxGeometry(windowWidth + 0.1, 0.05, frameDepth), frameMat);
-                topFrame.position.y = windowHeight / 2 + 0.025;
+                const topFrame = new THREE.Mesh(new THREE.BoxGeometry(windowWidth + frameThickness*2, frameThickness, frameDepth), frameMat);
+                topFrame.position.y = windowHeight / 2 + frameThickness / 2;
                 windowGroup.add(topFrame);
                 const bottomFrame = topFrame.clone();
-                bottomFrame.position.y = -windowHeight / 2 - 0.025;
+                bottomFrame.position.y = -windowHeight / 2 - frameThickness / 2;
                 windowGroup.add(bottomFrame);
-                const leftFrame = new THREE.Mesh(new THREE.BoxGeometry(0.05, windowHeight, frameDepth), frameMat);
-                leftFrame.position.x = -windowWidth / 2 - 0.025;
+                const leftFrame = new THREE.Mesh(new THREE.BoxGeometry(frameThickness, windowHeight, frameDepth), frameMat);
+                leftFrame.position.x = -windowWidth / 2 - frameThickness / 2;
                 windowGroup.add(leftFrame);
                 const rightFrame = leftFrame.clone();
-                rightFrame.position.x = windowWidth / 2 + 0.025;
+                rightFrame.position.x = windowWidth / 2 + frameThickness / 2;
                 windowGroup.add(rightFrame);
 
                 const paneGeo = new THREE.PlaneGeometry(windowWidth, windowHeight);
+                // Use the pre-generated spooky tree texture for window panes
                 const paneMat = new THREE.MeshStandardMaterial({ 
-                    color: 0xc0d0ff, 
+                    map: windowPaneTexture, // Use the landscape texture
                     transparent: true, 
-                    opacity: 0.3,
+                    opacity: 0.85, // Slightly more opaque to see texture
                     side: THREE.DoubleSide,
-                    emissive: 0x504070, 
-                    emissiveIntensity: 0.2
+                    emissive: 0x101020, // Very subtle blue/purple emissive from the "night"
+                    emissiveIntensity: 0.1
                 });
                 const pane = new THREE.Mesh(paneGeo, paneMat);
+                pane.position.z = frameDepth/2 - 0.01; 
                 windowGroup.add(pane);
-
-                // Position window ON the wall surface
-                windowGroup.position.y = wallHeight / 2; // Center vertically on the wall object
+                
+                windowGroup.position.y = wallMesh.position.y; 
 
                 if (wallOrientation === 'back') {
-                    windowGroup.position.x = -wallWidth / 2 + spacing + windowWidth / 2 + i * (windowWidth + spacing);
-                    windowGroup.position.z = wallMesh.position.z + wallMesh.geometry.parameters.depth / 2 + frameDepth/2 + 0.001; // Slightly offset
+                    windowGroup.position.x = -wallLength / 2 + spacing + windowWidth / 2 + i * (windowWidth + spacing);
+                    windowGroup.position.z = wallMesh.position.z + wallSideDepth / 2 + 0.001; 
                 } else if (wallOrientation === 'front') {
-                    windowGroup.position.x = -wallWidth / 2 + spacing + windowWidth / 2 + i * (windowWidth + spacing);
-                    windowGroup.position.z = wallMesh.position.z - wallMesh.geometry.parameters.depth / 2 - frameDepth/2 - 0.001;
+                    windowGroup.position.x = -wallLength / 2 + spacing + windowWidth / 2 + i * (windowWidth + spacing);
+                    windowGroup.position.z = wallMesh.position.z - wallSideDepth / 2 - 0.001;
                 } else if (wallOrientation === 'left') {
-                    windowGroup.position.x = wallMesh.position.x - wallMesh.geometry.parameters.width / 2 - frameDepth/2 - 0.001;
-                    windowGroup.position.z = -wallWidth / 2 + spacing + windowWidth / 2 + i * (windowWidth + spacing);
+                    windowGroup.position.x = wallMesh.position.x - wallSideDepth / 2 - 0.001;
+                    windowGroup.position.z = -wallLength / 2 + spacing + windowWidth / 2 + i * (windowWidth + spacing); 
                     windowGroup.rotation.y = Math.PI / 2;
                 } else if (wallOrientation === 'right') {
-                    windowGroup.position.x = wallMesh.position.x + wallMesh.geometry.parameters.width / 2 + frameDepth/2 + 0.001;
-                    windowGroup.position.z = -wallWidth / 2 + spacing + windowWidth / 2 + i * (windowWidth + spacing);
+                    windowGroup.position.x = wallMesh.position.x + wallSideDepth / 2 + 0.001;
+                    windowGroup.position.z = -wallLength / 2 + spacing + windowWidth / 2 + i * (windowWidth + spacing); 
                     windowGroup.rotation.y = -Math.PI / 2;
                 }
                 
@@ -711,9 +877,10 @@
             }
         }
         
-        function createWallDecorations(wallMesh, type, wallOrientation = 'back') {
+        function createWallDecorations(wallMesh, type, wallOrientation = 'back', yOffset = ROOM_HEIGHT * 0.65, characterType = null) {
             const decorationGroup = new THREE.Group();
-            decorationGroup.position.y = ROOM_HEIGHT * 0.65; // Default height
+            decorationGroup.position.y = yOffset; 
+            const wallSideDepth = wallMesh.geometry.parameters.depth; 
 
             if (type === 'ghost_garland') {
                 const numGhosts = 5;
@@ -725,42 +892,48 @@
                     ghostDeco.position.x = (i - (numGhosts - 1) / 2) * ghostSpacing;
                     decorationGroup.add(ghostDeco);
                 }
-            } else if (type === 'spooky_portrait') {
-                const frameSize = 0.5;
+            } else if (type === 'character_portrait' && characterType) {
+                const frameSize = 0.6;
                 const frameThickness = 0.05;
-                const frameMat = new THREE.MeshStandardMaterial({ color: 0x221100 });                 
-                const mainFrame = new THREE.Mesh(new THREE.BoxGeometry(frameSize, frameSize, frameThickness), frameMat);
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0x4a2b0f }); // Darker wood frame             
+                const mainFrame = new THREE.Mesh(new THREE.BoxGeometry(frameSize, frameSize * 1.2, frameThickness), frameMat); // Slightly taller frame
                 decorationGroup.add(mainFrame);
-                const pictureGeo = new THREE.PlaneGeometry(frameSize - 0.1, frameSize - 0.1);
-                const pictureMat = new THREE.MeshBasicMaterial({ color: 0x503060 }); 
+                
+                const portraitTexture = createCharacterPortraitTexture(characterType);
+                const pictureGeo = new THREE.PlaneGeometry(frameSize - 0.1, (frameSize * 1.2) - 0.1);
+                const pictureMat = new THREE.MeshBasicMaterial({ map: portraitTexture, side: THREE.DoubleSide }); 
                 const picture = new THREE.Mesh(pictureGeo, pictureMat);
                 picture.position.z = frameThickness / 2 + 0.001; 
                 decorationGroup.add(picture);
+
             } else if (type === 'hanging_bats') {
                 for (let i=0; i < 3; i++) {
-                    const shape = new THREE.Shape(); // Simple bat shape
+                    const shape = new THREE.Shape(); 
                     shape.moveTo(0,0); shape.lineTo(-0.1, 0.05); shape.lineTo(-0.05, 0); shape.lineTo(-0.1, -0.05); shape.lineTo(0,0);
                     shape.lineTo(0.1, -0.05); shape.lineTo(0.05, 0); shape.lineTo(0.1, 0.05); shape.lineTo(0,0);
                     const batGeo = new THREE.ShapeGeometry(shape);
                     const batMat = new THREE.MeshBasicMaterial({color: 0x1a1a1a, side: THREE.DoubleSide});
                     const bat = new THREE.Mesh(batGeo, batMat);
-                    bat.position.x = (i - 1) * 0.3; // Spread them out
-                    bat.position.y = (Math.random() -0.5) * 0.1; // Slight vertical variation
+                    bat.position.x = (i - 1) * 0.4; 
+                    bat.position.y = (Math.random() -0.5) * 0.1; 
                     decorationGroup.add(bat);
                 }
             }
 
+            decorationGroup.position.y = wallMesh.position.y + (Math.random() * 0.4 - 0.2); 
 
             if (wallOrientation === 'back') {
-                decorationGroup.position.z = wallMesh.position.z + wallMesh.geometry.parameters.depth / 2 + 0.01;
+                decorationGroup.position.z = wallMesh.position.z + wallSideDepth / 2 + 0.011; 
             } else if (wallOrientation === 'front') {
-                decorationGroup.position.z = wallMesh.position.z - wallMesh.geometry.parameters.depth / 2 - 0.01;
-                decorationGroup.rotation.y = Math.PI; // Face inwards
+                decorationGroup.position.z = wallMesh.position.z - wallSideDepth / 2 - 0.011;
+                decorationGroup.rotation.y = Math.PI; 
             } else if (wallOrientation === 'left') {
-                decorationGroup.position.x = wallMesh.position.x - wallMesh.geometry.parameters.width / 2 - 0.01;
+                decorationGroup.position.x = wallMesh.position.x - wallSideDepth / 2 - 0.011;
+                decorationGroup.position.z = (Math.random()-0.5) * (wallMesh.geometry.parameters.width -1.5); // Ensure it's on the wall
                 decorationGroup.rotation.y = Math.PI / 2;
             } else if (wallOrientation === 'right') {
-                decorationGroup.position.x = wallMesh.position.x + wallMesh.geometry.parameters.width / 2 + 0.01;
+                decorationGroup.position.x = wallMesh.position.x + wallSideDepth / 2 + 0.011;
+                decorationGroup.position.z = (Math.random()-0.5) * (wallMesh.geometry.parameters.width -1.5); // Ensure it's on the wall
                 decorationGroup.rotation.y = -Math.PI / 2;
             }
             
@@ -770,10 +943,9 @@
 
 
         function create3DRoom() { 
-            // Clear previous decorations if any
             wallDecorations.forEach(deco => {
                 scene.remove(deco);
-                deco.traverse(child => { // Dispose geometries and materials
+                deco.traverse(child => { 
                     if (child.geometry) child.geometry.dispose();
                     if (child.material) {
                         if (Array.isArray(child.material)) {
@@ -785,25 +957,24 @@
                 });
             });
             wallDecorations = [];
-            roomObjects = []; // Reset room objects for collision (mainly walls)
+            roomObjects = []; 
 
-            // Floor
             const floorCanvas = document.createElement('canvas');
             const tileCtx = floorCanvas.getContext('2d');
-            const tileSize = 64; // Pixel size of one tile in the texture
+            const tileSize = 32; 
             floorCanvas.width = tileSize * 2;
             floorCanvas.height = tileSize * 2;
-            tileCtx.fillStyle = '#000000'; // Black
+            tileCtx.fillStyle = '#1a1a1a'; 
             tileCtx.fillRect(0, 0, tileSize, tileSize);
             tileCtx.fillRect(tileSize, tileSize, tileSize, tileSize);
-            tileCtx.fillStyle = '#FFFFFF'; // White
+            tileCtx.fillStyle = '#f0f0f0'; 
             tileCtx.fillRect(tileSize, 0, tileSize, tileSize);
             tileCtx.fillRect(0, tileSize, tileSize, tileSize);
             const floorTexture = new THREE.CanvasTexture(floorCanvas);
             floorTexture.wrapS = THREE.RepeatWrapping;
             floorTexture.wrapT = THREE.RepeatWrapping;
-            const tilesPerMeter = 4; // How many tiles fit in 1 world unit
-            floorTexture.repeat.set(ROOM_WIDTH / (tileSize/ (tileSize/tilesPerMeter) ), ROOM_DEPTH / (tileSize/ (tileSize/tilesPerMeter) ));
+            const tilesPerMeter = 6; 
+            floorTexture.repeat.set(ROOM_WIDTH * tilesPerMeter / 2, ROOM_DEPTH * tilesPerMeter / 2 );
 
 
             const floorGeometry = new THREE.PlaneGeometry(ROOM_WIDTH, ROOM_DEPTH);
@@ -816,42 +987,39 @@
             const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xcdc1ff }); 
             const wallThickness = 0.2;
 
-            // Back Wall
             const backWallMesh = new THREE.Mesh(new THREE.BoxGeometry(ROOM_WIDTH, ROOM_HEIGHT, wallThickness), wallMaterial);
             backWallMesh.position.set(0, ROOM_HEIGHT / 2, -ROOM_DEPTH / 2 + wallThickness / 2);
             scene.add(backWallMesh);
             roomObjects.push(backWallMesh);
             createWindows(backWallMesh, 2, 'back'); 
-            createWallDecorations(backWallMesh, 'hanging_bats', 'back');
+            createWallDecorations(backWallMesh, 'hanging_bats', 'back', ROOM_HEIGHT * 0.85);
 
 
-            // Front Wall
             const frontWallMesh = new THREE.Mesh(new THREE.BoxGeometry(ROOM_WIDTH, ROOM_HEIGHT, wallThickness), wallMaterial);
             frontWallMesh.position.set(0, ROOM_HEIGHT / 2, ROOM_DEPTH / 2 - wallThickness / 2);
-            scene.add(frontWallMesh); // Add front wall to scene
+            scene.add(frontWallMesh); 
             roomObjects.push(frontWallMesh); 
             createWindows(frontWallMesh, 2, 'front');
-            // createWallDecorations(frontWallMesh, 'spooky_portrait', 'front'); // Example
+            createWallDecorations(frontWallMesh, 'character_portrait', 'front', ROOM_HEIGHT * 0.55, 'kitty');
 
-
-            // Left Wall
-            const leftWallMesh = new THREE.Mesh(new THREE.BoxGeometry(ROOM_DEPTH, ROOM_HEIGHT, wallThickness), wallMaterial); // Note: width is ROOM_DEPTH due to rotation
+            
+            const leftWallMesh = new THREE.Mesh(new THREE.BoxGeometry(ROOM_DEPTH, ROOM_HEIGHT, wallThickness), wallMaterial); 
             leftWallMesh.position.set(-ROOM_WIDTH / 2 + wallThickness / 2, ROOM_HEIGHT / 2, 0);
             leftWallMesh.rotation.y = Math.PI / 2; 
             scene.add(leftWallMesh);
             roomObjects.push(leftWallMesh);
             createWindows(leftWallMesh, 1, 'left');
-            createWallDecorations(leftWallMesh, 'ghost_garland', 'left');
+            createWallDecorations(leftWallMesh, 'ghost_garland', 'left', ROOM_HEIGHT * 0.8);
+            createWallDecorations(leftWallMesh, 'character_portrait', 'left', ROOM_HEIGHT * 0.45, 'keropi');
 
 
-            // Right Wall
             const rightWallMesh = new THREE.Mesh(new THREE.BoxGeometry(ROOM_DEPTH, ROOM_HEIGHT, wallThickness), wallMaterial);
             rightWallMesh.position.set(ROOM_WIDTH / 2 - wallThickness / 2, ROOM_HEIGHT / 2, 0);
             rightWallMesh.rotation.y = -Math.PI / 2; 
             scene.add(rightWallMesh);
             roomObjects.push(rightWallMesh);
             createWindows(rightWallMesh, 1, 'right');
-            createWallDecorations(rightWallMesh, 'spooky_portrait', 'right');
+            createWallDecorations(rightWallMesh, 'character_portrait', 'right', ROOM_HEIGHT * 0.6, 'kuromi');
 
             
             const ceilGeo = new THREE.PlaneGeometry(ROOM_WIDTH, ROOM_DEPTH);
@@ -870,13 +1038,13 @@
             roomObjects.push(counterMesh);
 
             const counterTopY = counterMesh.position.y + (ROOM_HEIGHT * 0.4) / 2 + 0.01; 
-            createBakeryItem('ghost_cupcake', new THREE.Vector3(-0.5, counterTopY, counterMesh.position.z));
-            createBakeryItem('ghost_cupcake', new THREE.Vector3(0, counterTopY, counterMesh.position.z + 0.05));
-            createBakeryItem('ghost_cupcake', new THREE.Vector3(0.5, counterTopY, counterMesh.position.z));
-            createBakeryItem('bat_cookie', new THREE.Vector3(-0.2, counterTopY, counterMesh.position.z - 0.1));
-            createBakeryItem('bat_cookie', new THREE.Vector3(0.2, counterTopY, counterMesh.position.z - 0.1));
-            createBakeryItem('web_lollipop', new THREE.Vector3(0.8, counterTopY + 0.125, counterMesh.position.z)); 
-            createBakeryItem('web_lollipop', new THREE.Vector3(-0.8, counterTopY + 0.125, counterMesh.position.z));
+            createBakeryItem('ghost_cupcake', new THREE.Vector3(-0.5, counterTopY, counterMesh.position.z + 0.05));
+            createBakeryItem('ghost_cupcake', new THREE.Vector3(0, counterTopY, counterMesh.position.z + 0.1));
+            createBakeryItem('ghost_cupcake', new THREE.Vector3(0.5, counterTopY, counterMesh.position.z + 0.05));
+            createBakeryItem('bat_cookie', new THREE.Vector3(-0.2, counterTopY + 0.01, counterMesh.position.z - 0.05)); 
+            createBakeryItem('bat_cookie', new THREE.Vector3(0.2, counterTopY + 0.01, counterMesh.position.z - 0.05));
+            createBakeryItem('web_lollipop', new THREE.Vector3(0.8, 0.1, counterMesh.position.z)); 
+            createBakeryItem('web_lollipop', new THREE.Vector3(-0.8, 0.1, counterMesh.position.z));
 
 
             const ovenGeo = new THREE.BoxGeometry(ROOM_WIDTH * 0.2, ROOM_HEIGHT * 0.3, ROOM_DEPTH * 0.15);
@@ -980,10 +1148,9 @@
                 return;
             }
             if (!scene) { 
-                initThreeJS(); // Calls create3DRoom which now includes decorations
+                initThreeJS(); 
             } else {
-                 // If scene exists, just re-create dynamic elements like evidence and ghost
-                create3DRoom(); // Re-create room to clear old decorations and place new ones
+                create3DRoom(); 
             }
             
             spookLevel = 0;
@@ -1356,13 +1523,13 @@
                 }
             });
 
-            if (crosshairEl) {
+            if (crosshairInnerEl) { 
                 if (makeCrosshairGlow && currentTool) {
-                    crosshairEl.style.borderColor = currentTool.color;
-                    crosshairEl.style.boxShadow = `0 0 12px ${currentTool.color}, 0 0 5px ${currentTool.color} inset`;
+                    crosshairInnerEl.style.borderColor = currentTool.color;
+                    crosshairInnerEl.style.boxShadow = `0 0 12px ${currentTool.color}, 0 0 5px ${currentTool.color} inset`;
                 } else {
-                    crosshairEl.style.borderColor = 'white';
-                    crosshairEl.style.boxShadow = 'none';
+                    crosshairInnerEl.style.borderColor = 'white';
+                    crosshairInnerEl.style.boxShadow = 'none';
                 }
             }
 
@@ -1377,18 +1544,15 @@
                 sweetheartMesh.position.y = CAMERA_HEIGHT + Math.sin(Date.now() * 0.001) * 0.1;
             }
 
-            // Animate floating orbs
             floatingOrbs.forEach(orb => {
                 orb.position.x += orb.userData.dx;
                 orb.position.y += orb.userData.dy;
                 orb.position.z += orb.userData.dz;
 
-                // Bounce off conceptual room boundaries
                 if (Math.abs(orb.position.x) > ROOM_WIDTH / 2 - 0.2) orb.userData.dx *= -1;
                 if (orb.position.y < 0.2 || orb.position.y > ROOM_HEIGHT - 0.2) orb.userData.dy *= -1;
                 if (Math.abs(orb.position.z) > ROOM_DEPTH / 2 - 0.2) orb.userData.dz *= -1;
                 
-                // Make them slowly pulse opacity
                 orb.material.opacity = 0.3 + Math.sin(Date.now() * 0.0005 + orb.position.x) * 0.2;
             });
 
